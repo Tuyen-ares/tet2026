@@ -1,4 +1,4 @@
-name: Deploy Backend to Heroku
+name: Deploy Backend to Render
 
 on:
   push:
@@ -9,20 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        working-directory: ./backend
-        run: npm ci
-
-      - name: Deploy to Heroku
-        uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-          usedocker: false
+      - name: Trigger Render deploy hook
+        run: |
+          curl -sS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
