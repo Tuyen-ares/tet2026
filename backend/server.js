@@ -16,8 +16,15 @@ const db = new sqlite3.Database(DB_PATH);
 
 db.serialize(() => {
   db.run(
-    "CREATE TABLE IF NOT EXISTS links (id TEXT PRIMARY KEY, name TEXT, wish TEXT, min INTEGER, max INTEGER, created_at INTEGER)"
+    "CREATE TABLE IF NOT EXISTS links (id TEXT PRIMARY KEY, name TEXT, wish TEXT, min INTEGER, max INTEGER, audio TEXT, created_at INTEGER)"
   );
+  db.all("PRAGMA table_info(links)", (err, rows) => {
+    if (err) return;
+    const hasAudio = rows.some((row) => row.name === "audio");
+    if (!hasAudio) {
+      db.run("ALTER TABLE links ADD COLUMN audio TEXT");
+    }
+  });
 });
 
 app.use(express.json());
@@ -43,6 +50,7 @@ const generateId = () => {
 app.post("/api/create", (req, res) => {
   const name = String(req.body?.name || "").trim();
   const wish = String(req.body?.wish || "").trim();
+  const audio = String(req.body?.audio || "").trim();
   const minInput = safeInt(req.body?.min, 1000);
   const maxInput = safeInt(req.body?.max, 10000);
   const { safeMin, safeMax } = normalizeMinMax(minInput, maxInput);
@@ -56,8 +64,8 @@ app.post("/api/create", (req, res) => {
   const createdAt = Date.now();
 
   db.run(
-    "INSERT INTO links (id, name, wish, min, max, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-    [id, name, wish, safeMin, safeMax, createdAt],
+    "INSERT INTO links (id, name, wish, min, max, audio, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    [id, name, wish, safeMin, safeMax, audio, createdAt],
     (err) => {
       if (err) {
         res.status(500).json({ error: "DB_ERROR" });
@@ -76,7 +84,7 @@ app.get("/api/card/:id", (req, res) => {
   }
 
   db.get(
-    "SELECT id, name, wish, min, max, created_at FROM links WHERE id = ?",
+    "SELECT id, name, wish, min, max, audio, created_at FROM links WHERE id = ?",
     [id],
     (err, row) => {
       if (err) {
@@ -96,6 +104,7 @@ app.get("/api/card/:id", (req, res) => {
         wish: row.wish || "",
         min: row.min,
         max: row.max,
+        audio: row.audio || "",
         createdAt: row.created_at,
         expiresAt,
         expired,
