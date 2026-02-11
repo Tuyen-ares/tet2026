@@ -34,6 +34,7 @@ let countdownTimer = null;
 let currentMin = 1000;
 let currentMax = 10000;
 let lastActiveIndex = null;
+let effectsTimer = null;
 
 const DEFAULT_WISH =
   "Năm mới mở ra một hành trình mới, mong {name} luôn đủ mạnh mẽ để theo đuổi điều mình tin, đủ dịu dàng để giữ lại những điều đẹp nhất và đủ may mắn để hạnh phúc luôn ở cạnh.";
@@ -178,7 +179,7 @@ const finishSpin = (angle) => {
 const showBuilder = () => {
   builderSection.classList.remove("d-none");
   cardSection.classList.add("d-none");
-  triggerEffects(effectsBuilder);
+  startContinuousEffects(effectsBuilder, "Yêu", Date.now());
 };
 
 const showCard = (name, createdAt, wish) => {
@@ -187,7 +188,7 @@ const showCard = (name, createdAt, wish) => {
   greeting.textContent = `Chúc mừng năm mới, ${name}!`;
   subGreeting.textContent = `Chúc ${name} một năm mới rực rỡ, bình an và luôn tràn ngập yêu thương.`;
   wishText.textContent = wish;
-  triggerEffects(effectsLayer);
+  startContinuousEffects(effectsLayer, name, createdAt);
 
   const updateCountdown = () => {
     const remaining = EXPIRY_MS - (Date.now() - createdAt);
@@ -195,6 +196,7 @@ const showCard = (name, createdAt, wish) => {
       expireNotice.textContent = "Link đã hết hạn.";
       expiredBox.classList.remove("d-none");
       spinBtn.disabled = true;
+      stopContinuousEffects();
       return;
     }
     const minutes = Math.floor(remaining / 60000);
@@ -357,4 +359,95 @@ const triggerEffects = (targetLayer) => {
   setTimeout(() => {
     targetLayer.innerHTML = "";
   }, 4200);
+};
+
+const triggerNameFireworks = (targetLayer, name) => {
+  if (!targetLayer) return;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const safeName = (name || "").trim() || "Yêu";
+  const headerY = height * 0.15 + 30;
+
+  for (let i = 0; i < 3; i += 1) {
+    const icon = document.createElement("div");
+    icon.className = "firework-icon";
+    icon.style.left = `${Math.random() * width}px`;
+    icon.style.top = `${headerY + Math.random() * 40}px`;
+    icon.style.animationDelay = `${0.2 + i * 0.3}s`;
+    targetLayer.appendChild(icon);
+
+    const sparks = 10;
+    const baseDelay = 400 + i * 220;
+    setTimeout(() => {
+      for (let j = 0; j < sparks; j += 1) {
+        const particle = document.createElement("div");
+        particle.className = "name-particle";
+        particle.textContent = safeName;
+        const angle = (Math.PI * 2 * j) / sparks;
+        const distance = 90 + Math.random() * 50;
+        particle.style.left = icon.style.left;
+        particle.style.top = icon.style.top;
+        particle.style.setProperty(
+          "--spark-x",
+          `${Math.cos(angle) * distance}px`
+        );
+        particle.style.setProperty(
+          "--spark-y",
+          `${Math.sin(angle) * distance}px`
+        );
+        targetLayer.appendChild(particle);
+        setTimeout(() => {
+          particle.remove();
+        }, 1700);
+      }
+    }, baseDelay);
+  }
+};
+
+const triggerNameFall = (targetLayer, name) => {
+  if (!targetLayer) return;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const safeName = (name || "").trim() || "Yêu";
+  const headerY = height * 0.15 + 40;
+
+  for (let i = 0; i < 12; i += 1) {
+    const fall = document.createElement("div");
+    fall.className = "name-fall";
+    fall.textContent = safeName;
+    const startX = Math.random() * width;
+    const drift = (Math.random() - 0.5) * 140;
+    fall.style.left = `${startX}px`;
+    fall.style.top = `${headerY}px`;
+    fall.style.setProperty("--fall-x", `${drift}px`);
+    fall.style.setProperty("--fall-y", `${height * 0.6 + Math.random() * 140}px`);
+    fall.style.animationDelay = `${Math.random() * 0.4}s`;
+    targetLayer.appendChild(fall);
+    setTimeout(() => {
+      fall.remove();
+    }, 3600);
+  }
+};
+
+const startContinuousEffects = (targetLayer, name, createdAt) => {
+  stopContinuousEffects();
+  const runCycle = () => {
+    const remaining = EXPIRY_MS - (Date.now() - createdAt);
+    if (remaining <= 0) {
+      stopContinuousEffects();
+      return;
+    }
+    triggerEffects(targetLayer);
+    triggerNameFireworks(targetLayer, name);
+    triggerNameFall(targetLayer, name);
+  };
+  runCycle();
+  effectsTimer = setInterval(runCycle, 4500);
+};
+
+const stopContinuousEffects = () => {
+  if (effectsTimer) {
+    clearInterval(effectsTimer);
+    effectsTimer = null;
+  }
 };
