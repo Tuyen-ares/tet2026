@@ -27,6 +27,7 @@ const canvas = document.getElementById("wheel");
 const ctx = canvas.getContext("2d");
 const effectsLayer = document.getElementById("effects");
 const effectsBuilder = document.getElementById("effectsBuilder");
+const loveAudio = document.getElementById("loveAudio");
 
 let currentAngle = 0;
 let spinning = false;
@@ -239,6 +240,7 @@ const parseLink = async () => {
 
     currentMin = data.min || 1000;
     currentMax = data.max || 10000;
+    setupAudio(data.audio);
 
     showCard(data.name, data.createdAt, wish);
     if (data.expired) {
@@ -256,6 +258,7 @@ linkForm.addEventListener("submit", async (event) => {
   if (!name) return;
 
   const wishContent = document.getElementById("wishContent").value.trim();
+  const audioUrl = document.getElementById("audioUrl").value.trim();
   const minInput = Number(document.getElementById("minLuck").value) || 1000;
   const maxInput = Number(document.getElementById("maxLuck").value) || 10000;
   const { safeMin, safeMax } = normalizeMinMax(minInput, maxInput);
@@ -269,6 +272,7 @@ linkForm.addEventListener("submit", async (event) => {
       body: JSON.stringify({
         name,
         wish: wishContent,
+        audio: audioUrl,
         min: currentMin,
         max: currentMax,
       }),
@@ -303,6 +307,32 @@ spinBtn.addEventListener("click", spinWheel);
 
 drawWheel(currentAngle);
 parseLink();
+
+const setupAudio = (audioUrl) => {
+  if (!loveAudio) return;
+  if (!audioUrl) {
+    loveAudio.src = "";
+    return;
+  }
+  loveAudio.controls = false;
+  loveAudio.src = audioUrl;
+  loveAudio.volume = 0.7;
+  loveAudio.loop = true;
+  loveAudio.autoplay = true;
+  const tryPlay = () => {
+    loveAudio.play().catch(() => {
+      loveAudio.classList.remove("d-none");
+    });
+  };
+  setTimeout(tryPlay, 600);
+  document.addEventListener(
+    "click",
+    () => {
+      loveAudio.play().catch(() => {});
+    },
+    { once: true }
+  );
+};
 
 const triggerEffects = (targetLayer) => {
   if (!targetLayer) return;
