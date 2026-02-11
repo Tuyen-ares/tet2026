@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tuyen-ares.github.io/tet2026/sitemap.xml
