@@ -43,6 +43,47 @@ body {
 
 .lead {
   color: #f7e5c7;
+  position: relative;
+}
+
+.heart-text {
+  position: relative;
+  display: inline-block;
+  padding: 6px 10px;
+  background: linear-gradient(90deg, rgba(255, 214, 122, 0.15), rgba(255, 120, 120, 0.12));
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.heart-text::after {
+  content: "❤ ❤ ❤ ❤ ❤";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  text-align: center;
+  color: rgba(255, 214, 122, 0.25);
+  letter-spacing: 0.6em;
+  animation: floatHearts 4s linear infinite;
+}
+
+.heart-text::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 214, 122, 0.18), transparent 45%);
+  opacity: 0.6;
+}
+
+@keyframes floatHearts {
+  0% {
+    transform: translate(-10%, -50%);
+  }
+  100% {
+    transform: translate(10%, -50%);
+  }
 }
 
 .card-glow {

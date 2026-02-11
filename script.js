@@ -29,6 +29,8 @@ const effectsLayer = document.getElementById("effects");
 const effectsBuilder = document.getElementById("effectsBuilder");
 const loveAudio = document.getElementById("loveAudio");
 const audioOverlay = document.getElementById("audioOverlay");
+const senderPronounInput = document.getElementById("senderPronoun");
+const receiverPronounInput = document.getElementById("receiverPronoun");
 
 let currentAngle = 0;
 let spinning = false;
@@ -188,7 +190,7 @@ const showCard = (name, createdAt, wish) => {
   builderSection.classList.add("d-none");
   cardSection.classList.remove("d-none");
   greeting.textContent = `Chúc mừng năm mới, ${name}!`;
-  subGreeting.textContent = `Chúc ${name} một năm mới rực rỡ, bình an và luôn tràn ngập yêu thương.`;
+  // subGreeting will be set in updateHeaderLine for personalization
   wishText.textContent = wish;
   startContinuousEffects(effectsLayer, name, createdAt);
 
@@ -241,6 +243,7 @@ const parseLink = async () => {
 
     currentMin = data.min || 1000;
     currentMax = data.max || 10000;
+    updateHeaderLine(data.name, data.sender, data.receiver);
     setupAudio(data.audio);
 
     showCard(data.name, data.createdAt, wish);
@@ -260,6 +263,8 @@ linkForm.addEventListener("submit", async (event) => {
 
   const wishContent = document.getElementById("wishContent").value.trim();
   const audioUrl = document.getElementById("audioUrl").value.trim();
+  const senderPronoun = senderPronounInput?.value?.trim() || "";
+  const receiverPronoun = receiverPronounInput?.value?.trim() || "";
   const minInput = Number(document.getElementById("minLuck").value) || 1000;
   const maxInput = Number(document.getElementById("maxLuck").value) || 10000;
   const { safeMin, safeMax } = normalizeMinMax(minInput, maxInput);
@@ -274,6 +279,8 @@ linkForm.addEventListener("submit", async (event) => {
         name,
         wish: wishContent,
         audio: audioUrl,
+        sender: senderPronoun,
+        receiver: receiverPronoun,
         min: currentMin,
         max: currentMax,
       }),
@@ -408,6 +415,16 @@ const triggerEffects = (targetLayer) => {
   setTimeout(() => {
     targetLayer.innerHTML = "";
   }, 4200);
+};
+
+const updateHeaderLine = (name, sender, receiver) => {
+  const lead = document.querySelector(".lead");
+  if (!lead) return;
+  const cleanSender = (sender || "Người gửi").toLowerCase();
+  const cleanReceiver = (receiver || "người nhận").toLowerCase();
+  const phr = `${cleanSender} gửi ${cleanReceiver} ${name || ""} lời chúc đầu năm an lành và đầy yêu thương.`;
+  lead.innerHTML = `<span class="heart-text">${phr}</span>`;
+  subGreeting.textContent = `${cleanSender} mong ${cleanReceiver} ${name || ""} luôn rực rỡ, bình an và tràn ngập yêu thương.`;
 };
 
 const triggerNameFireworks = (targetLayer, name) => {
