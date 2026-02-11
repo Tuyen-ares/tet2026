@@ -28,6 +28,7 @@ const ctx = canvas.getContext("2d");
 const effectsLayer = document.getElementById("effects");
 const effectsBuilder = document.getElementById("effectsBuilder");
 const loveAudio = document.getElementById("loveAudio");
+const audioOverlay = document.getElementById("audioOverlay");
 
 let currentAngle = 0;
 let spinning = false;
@@ -312,26 +313,44 @@ const setupAudio = (audioUrl) => {
   if (!loveAudio) return;
   if (!audioUrl) {
     loveAudio.src = "";
+    if (audioOverlay) {
+      audioOverlay.classList.add("d-none");
+    }
     return;
   }
   loveAudio.controls = false;
+  loveAudio.preload = "auto";
   loveAudio.src = audioUrl;
+  loveAudio.load();
   loveAudio.volume = 0.7;
   loveAudio.loop = true;
   loveAudio.autoplay = true;
+  if (audioOverlay) {
+    audioOverlay.classList.remove("d-none");
+  }
   const tryPlay = () => {
     loveAudio.play().catch(() => {
-      loveAudio.classList.remove("d-none");
+      if (audioOverlay) {
+        audioOverlay.classList.remove("d-none");
+      }
     });
   };
-  setTimeout(tryPlay, 600);
-  document.addEventListener(
-    "click",
-    () => {
-      loveAudio.play().catch(() => {});
-    },
-    { once: true }
-  );
+  loveAudio.addEventListener("canplay", tryPlay, { once: true });
+  setTimeout(tryPlay, 150);
+  const handleUserInteract = () => {
+    loveAudio.play().finally(() => {
+      if (audioOverlay) {
+        audioOverlay.classList.add("d-none");
+      }
+    });
+  };
+  document.addEventListener("click", handleUserInteract, { once: true });
+  document.addEventListener("touchstart", handleUserInteract, { once: true });
+  loveAudio.addEventListener("play", () => {
+    if (audioOverlay) {
+      audioOverlay.classList.add("d-none");
+    }
+  });
 };
 
 const triggerEffects = (targetLayer) => {

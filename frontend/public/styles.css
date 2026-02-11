@@ -153,6 +153,48 @@ canvas {
   display: none !important;
 }
 
+.audio-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.8));
+  z-index: 10;
+  text-align: center;
+}
+
+.audio-label {
+  margin-top: 1.25rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #ffe8b6;
+  text-transform: uppercase;
+}
+
+.audio-pulse {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 122, 0.5), rgba(255, 140, 80, 0.2));
+  box-shadow: 0 0 0 0 rgba(255, 214, 122, 0.6);
+  animation: pulseGlow 1.8s ease-out infinite;
+}
+
+@keyframes pulseGlow {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 214, 122, 0.5);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 24px rgba(255, 214, 122, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 214, 122, 0);
+  }
+}
+
 .expired-box {
   padding: 1rem 1.25rem;
   border-radius: 14px;
