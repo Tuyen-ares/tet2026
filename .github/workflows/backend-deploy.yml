@@ -11,4 +11,4 @@ jobs:
       - uses: actions/checkout@v4
       - name: Trigger Render deploy hook
         run: |
-          curl -sS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          curl -sS -X POST "${{ secrets.NAMMOIVUIVE }}"
