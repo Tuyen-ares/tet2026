@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import sqlite3 from "sqlite3";
+import helmet from "helmet";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +30,14 @@ db.serialize(() => {
 
 app.use(express.json());
 app.use(express.static(PUBLIC_DIR));
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // keep simple to avoid blocking CDN assets
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    referrerPolicy: { policy: "no-referrer-when-downgrade" },
+  })
+);
 
 const safeInt = (value, fallback) => {
   const parsed = Number(value);
