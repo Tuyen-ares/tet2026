@@ -25,15 +25,22 @@ jobs:
           test -f frontend/public/index.html
           test -f frontend/public/thank-you.html
 
+      - name: Ensure .nojekyll (avoid GitHub Pages Jekyll processing)
+        run: |
+          mkdir -p frontend/public
+          touch frontend/public/.nojekyll
+        shell: bash
+
+      - name: Show publish directory contents (for debug)
+        run: |
+          echo "Listing frontend/public (first 200 entries)"
+          ls -la frontend/public || true
+          echo "--- recursive tree (trimmed) ---"
+          find frontend/public -maxdepth 4 -type f -print | sed -n '1,200p' || true
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/public
           publish_branch: gh-pages
-
-      - name: Ensure .nojekyll (avoid GitHub Pages Jekyll processing)
-        run: |
-          mkdir -p frontend/public
-          touch frontend/public/.nojekyll
-        shell: bash
