@@ -1,0 +1,9 @@
+{
+  "name": "nammoi-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node ./scripts/serve.js",
+    "start": "node ./scripts/serve.js"
+  }
+}

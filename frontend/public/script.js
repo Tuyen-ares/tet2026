@@ -10,27 +10,42 @@ const segmentColors = [
   "#ffb300",
 ];
 
+// front-end can override `window.__API_BASE__` to point to a remote backend.
+const API_BASE = (typeof window !== 'undefined' && window.__API_BASE__) || '';
+
 const builderSection = document.getElementById("builder");
-const cardSection = document.getElementById("card");
-const greeting = document.getElementById("greeting");
-const subGreeting = document.getElementById("subGreeting");
-const wishText = document.getElementById("wishText");
-const expireNotice = document.getElementById("expireNotice");
-const expiredBox = document.getElementById("expiredBox");
 const linkForm = document.getElementById("linkForm");
 const linkOutput = document.getElementById("linkOutput");
 const copyBtn = document.getElementById("copyBtn");
 const linkHint = document.getElementById("linkHint");
-const spinBtn = document.getElementById("spinBtn");
-const spinResult = document.getElementById("spinResult");
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
 const effectsLayer = document.getElementById("effects");
 const effectsBuilder = document.getElementById("effectsBuilder");
-const loveAudio = document.getElementById("loveAudio");
 const audioOverlay = document.getElementById("audioOverlay");
 const senderPronounInput = document.getElementById("senderPronoun");
 const receiverPronounInput = document.getElementById("receiverPronoun");
+const pageEyebrow = document.querySelector(".eyebrow");
+const pageTitle = document.querySelector(".display-title");
+const pageLead = document.querySelector(".lead");
+
+const defaultHeader = {
+  eyebrow: pageEyebrow ? pageEyebrow.textContent : "",
+  title: pageTitle ? pageTitle.textContent : "",
+  lead: pageLead ? pageLead.textContent : "",
+};
+
+// view-specific elements (populated after loading a view fragment)
+let cardSection = null;
+let greeting = null;
+let cardTitle = null;
+let subGreeting = null;
+let wishText = null;
+let expireNotice = null;
+let expiredBox = null;
+let spinBtn = null;
+let spinResult = null;
+let canvas = null;
+let ctx = null;
+let loveAudio = null;
 
 let currentAngle = 0;
 let spinning = false;
@@ -39,6 +54,7 @@ let currentMin = 1000;
 let currentMax = 10000;
 let lastActiveIndex = null;
 let effectsTimer = null;
+let hasRedirectedToThankYou = false;
 
 const DEFAULT_WISH =
   "Năm mới mở ra một hành trình mới, mong {name} luôn đủ mạnh mẽ để theo đuổi điều mình tin, đủ dịu dàng để giữ lại những điều đẹp nhất và đủ may mắn để hạnh phúc luôn ở cạnh.";
@@ -58,11 +74,112 @@ const randomVnd = (min, max) => {
   return pick;
 };
 
-const baseUrl = () => {
-  if (window.location.origin && window.location.origin !== "null") {
-    return `${window.location.origin}`;
+const truncateText = (text, limit = 180) => {
+  const clean = String(text || "").trim().replace(/\s+/g, " ");
+  if (clean.length <= limit) return clean;
+  return `${clean.slice(0, limit).trim()}...`;
+};
+
+const formatTypeLabel = (type) => {
+  if (type === "confess") return "Tỏ tình";
+  if (type === "lucky") return "Lì xì";
+  return "Chúc Tết";
+};
+
+const applyBuilderHeader = () => {
+  document.body.classList.remove("receiver-mode");
+  if (pageEyebrow) pageEyebrow.textContent = defaultHeader.eyebrow;
+  if (pageTitle) pageTitle.textContent = defaultHeader.title;
+  if (pageLead) pageLead.textContent = defaultHeader.lead;
+};
+
+const showInvalidLinkNotice = () => {
+  if (!pageLead) return;
+  pageLead.textContent = "Link không hợp lệ, đã hết hạn, hoặc backend chưa truy cập được. Hãy tạo link mới.";
+};
+
+const redirectToThankYou = (name) => {
+  if (hasRedirectedToThankYou) return;
+  hasRedirectedToThankYou = true;
+  const url = new URL("thank-you.html", document.baseURI);
+  url.searchParams.set("name", (name || "").trim());
+  window.location.href = url.toString();
+};
+
+const applyReceiverHeader = ({ name, title, wish, type, sender, receiver }) => {
+  document.body.classList.add("receiver-mode");
+  if (pageEyebrow) {
+    pageEyebrow.textContent = `${formatTypeLabel(type)} • Lời chúc dành cho ${name}`;
   }
-  return window.location.href.split("?")[0].split("#")[0];
+  if (pageTitle) {
+    pageTitle.textContent = title || `Chúc mừng năm mới, ${name}`;
+  }
+  if (pageLead) {
+    const senderText = (sender || "Người gửi").trim();
+    const receiverText = (receiver || "người nhận").trim();
+    const wishPreview = truncateText(wish || "", 220);
+    pageLead.innerHTML = "";
+
+    const line = document.createElement("span");
+    line.className = "heart-text";
+    line.textContent = `${senderText} gửi ${receiverText} ${name} lời chúc đầu năm an lành và đầy yêu thương.`;
+
+    const preview = document.createElement("span");
+    preview.className = "wish-preview";
+    preview.textContent = wishPreview ? `“${wishPreview}”` : "Chúc bạn một năm mới bình an, may mắn và hạnh phúc.";
+
+    pageLead.appendChild(line);
+    pageLead.appendChild(preview);
+  }
+};
+
+const buildShareUrl = (id) => {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.search = "";
+  url.searchParams.set("id", id);
+  return url.toString();
+};
+
+const getApiBases = () => {
+  const bases = [];
+  if (API_BASE) bases.push(API_BASE.replace(/\/$/, ""));
+  bases.push("");
+  if (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  ) {
+    bases.push("http://localhost:3000");
+  }
+  return [...new Set(bases)];
+};
+
+const requestJsonFromAnyApiBase = async (path, options = {}) => {
+  const bases = getApiBases();
+  let lastError = null;
+
+  for (const base of bases) {
+    const url = `${base}${path}`;
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        lastError = new Error(`HTTP ${response.status} at ${url}`);
+        continue;
+      }
+
+      const contentType = (response.headers.get("content-type") || "").toLowerCase();
+      if (!contentType.includes("application/json")) {
+        lastError = new Error(`Non-JSON response at ${url}`);
+        continue;
+      }
+
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("No API base available.");
 };
 
 const drawWheel = (angle = 0) => {
@@ -181,26 +298,32 @@ const finishSpin = (angle) => {
 };
 
 const showBuilder = () => {
+  applyBuilderHeader();
   builderSection.classList.remove("d-none");
-  cardSection.classList.add("d-none");
+  if (cardSection) cardSection.classList.add("d-none");
   startContinuousEffects(effectsBuilder, "Yêu", Date.now());
 };
 
-const showCard = (name, createdAt, wish) => {
+const showCard = (name, createdAt, wish, title, viewType = 'basic') => {
   builderSection.classList.add("d-none");
-  cardSection.classList.remove("d-none");
-  greeting.textContent = `Chúc mừng năm mới, ${name}!`;
+  if (cardSection) cardSection.classList.remove("d-none");
+  if (greeting) greeting.textContent = `Chúc mừng năm mới, ${name}!`;
+  if (cardTitle) cardTitle.textContent = title || "";
   // subGreeting will be set in updateHeaderLine for personalization
-  wishText.textContent = wish;
-  startContinuousEffects(effectsLayer, name, createdAt);
+  if (wishText) wishText.textContent = wish;
+  startContinuousEffects(effectsLayer, name, createdAt, viewType);
 
   const updateCountdown = () => {
+    if (!expireNotice) return;
     const remaining = EXPIRY_MS - (Date.now() - createdAt);
     if (remaining <= 0) {
-      expireNotice.textContent = "Link đã hết hạn.";
-      expiredBox.classList.remove("d-none");
-      spinBtn.disabled = true;
+      expireNotice.textContent = "Link đã hết hạn. Đang chuyển trang...";
       stopContinuousEffects();
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      redirectToThankYou(name);
       return;
     }
     const minutes = Math.floor(remaining / 60000);
@@ -231,28 +354,35 @@ const parseLink = async () => {
   }
 
   try {
-    const response = await fetch(`/api/card/${encodeURIComponent(cardId)}`);
-    if (!response.ok) {
-      showBuilder();
+    const data = await requestJsonFromAnyApiBase(`/api/card/${encodeURIComponent(cardId)}`);
+    if (data.expired) {
+      redirectToThankYou(data.name);
       return;
     }
-    const data = await response.json();
     const wish =
       (data.wish ? data.wish : "").trim().replace(/{name}/gi, data.name) ||
       DEFAULT_WISH.replace(/{name}/g, data.name);
 
     currentMin = data.min || 1000;
     currentMax = data.max || 10000;
+    // load view fragment based on type, then initialize view elements
+    const viewType = data.type || 'basic';
+    await loadViewFragment(viewType);
+    applyReceiverHeader({
+      name: data.name,
+      title: data.title,
+      wish,
+      type: viewType,
+      sender: data.sender,
+      receiver: data.receiver,
+    });
     updateHeaderLine(data.name, data.sender, data.receiver);
     setupAudio(data.audio);
 
-    showCard(data.name, data.createdAt, wish);
-    if (data.expired) {
-      expiredBox.classList.remove("d-none");
-      spinBtn.disabled = true;
-    }
+    showCard(data.name, data.createdAt, wish, data.title, viewType);
   } catch (error) {
     showBuilder();
+    showInvalidLinkNotice();
   }
 };
 
@@ -272,49 +402,138 @@ linkForm.addEventListener("submit", async (event) => {
   currentMax = safeMax;
 
   try {
-    const response = await fetch("/api/create", {
+    // Query these at submit time because the link-box component is loaded
+    // asynchronously and `linkOutput` / `linkHint` may be null earlier.
+    const linkOutputEl = document.getElementById('linkOutput');
+    const linkHintEl = document.getElementById('linkHint');
+
+    const data = await requestJsonFromAnyApiBase(`/api/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
+        title: (document.getElementById('cardTitleInput') || {}).value || '',
         wish: wishContent,
         audio: audioUrl,
         sender: senderPronoun,
         receiver: receiverPronoun,
+        type: (document.getElementById('pageType') || {}).value || 'basic',
         min: currentMin,
         max: currentMax,
       }),
     });
-    if (!response.ok) {
-      linkHint.textContent = "Không tạo link được, thử lại nhé.";
-      return;
+    // Use query param for compatibility with static servers that don't
+    // rewrite SPA routes (ensures index.html is served and the client
+    // can read ?id=... and show the card view).
+    const url = buildShareUrl(data.id);
+    if (linkOutputEl) linkOutputEl.value = url;
+    if (linkHintEl) linkHintEl.textContent = "Link có hiệu lực trong 20 phút.";
+  } catch (error) {
+    const linkHintEl = document.getElementById('linkHint');
+    if (linkHintEl) linkHintEl.textContent = "Không tạo link được, thử lại nhé.";
+  }
+});
+
+if (copyBtn) {
+  copyBtn.addEventListener("click", async () => {
+    if (!linkOutput.value) return;
+    try {
+      await navigator.clipboard.writeText(linkOutput.value);
+      copyBtn.textContent = "Đã sao chép";
+      setTimeout(() => {
+        copyBtn.textContent = "Sao chép";
+      }, 1500);
+    } catch (error) {
+      copyBtn.textContent = "Không sao chép được";
     }
-    const data = await response.json();
-    const url = `${baseUrl()}/c/${data.id}`;
-    linkOutput.value = url;
-    linkHint.textContent = "Link có hiệu lực trong 20 phút.";
-  } catch (error) {
-    linkHint.textContent = "Không tạo link được, thử lại nhé.";
-  }
-});
+  });
+}
 
-copyBtn.addEventListener("click", async () => {
-  if (!linkOutput.value) return;
+// helper: load a view fragment into #view-root and init view elements
+async function loadViewFragment(type) {
+  const root = document.getElementById('view-root');
+  if (!root) return;
   try {
-    await navigator.clipboard.writeText(linkOutput.value);
-    copyBtn.textContent = "Đã sao chép";
-    setTimeout(() => {
-      copyBtn.textContent = "Sao chép";
-    }, 1500);
-  } catch (error) {
-    copyBtn.textContent = "Không sao chép được";
+    let res = await fetch(`views/${type}.html`);
+    if (!res.ok) {
+      // fallback to basic view to avoid leaving the builder visible but
+      // without a proper recipient card. This makes the experience more
+      // robust on static servers where specific fragments may be missing.
+      res = await fetch(`views/basic.html`);
+      if (!res.ok) {
+        root.innerHTML = '<div class="text-center p-4">Không tìm thấy view.</div>';
+        return;
+      }
+    }
+    const html = await res.text();
+    root.innerHTML = html;
+    initViewElements();
+  } catch (err) {
+    root.innerHTML = '<div class="text-center p-4">Lỗi khi tải view.</div>';
   }
-});
+}
 
-spinBtn.addEventListener("click", spinWheel);
+function initViewElements() {
+  cardSection = document.getElementById('card');
+  greeting = document.getElementById('greeting');
+  cardTitle = document.getElementById('cardTitle');
+  subGreeting = document.getElementById('subGreeting');
+  wishText = document.getElementById('wishText');
+  expireNotice = document.getElementById('expireNotice');
+  expiredBox = document.getElementById('expiredBox');
+  spinBtn = document.getElementById('spinBtn');
+  spinResult = document.getElementById('spinResult');
+  canvas = document.getElementById('wheel');
+  loveAudio = document.getElementById('loveAudio');
+  if (canvas) {
+    try {
+      ctx = canvas.getContext('2d');
+    } catch (e) {
+      ctx = null;
+    }
+  }
+  if (spinBtn) {
+    spinBtn.removeEventListener('click', spinWheel);
+    spinBtn.addEventListener('click', spinWheel);
+  }
+  if (canvas && ctx) drawWheel(currentAngle);
+}
 
-drawWheel(currentAngle);
+// init: draw static wheel on page load if no card id
 parseLink();
+
+// load shared components (link-box)
+async function loadComponent(name, targetId) {
+  const root = document.getElementById(targetId);
+  if (!root) return;
+  try {
+    const res = await fetch(`components/${name}.html`);
+    if (!res.ok) return;
+    root.innerHTML = await res.text();
+    // re-wire copy button and linkOutput if component provides them
+    const copy = document.getElementById('copyBtn');
+    if (copy) {
+      copy.removeEventListener('click', () => { });
+      copy.addEventListener('click', async () => {
+        const linkOutputEl = document.getElementById('linkOutput');
+        if (!linkOutputEl || !linkOutputEl.value) return;
+        try {
+          await navigator.clipboard.writeText(linkOutputEl.value);
+          copy.textContent = 'Đã sao chép';
+          setTimeout(() => (copy.textContent = 'Sao chép'), 1500);
+        } catch (e) {
+          copy.textContent = 'Không sao chép được';
+        }
+      });
+    }
+  } catch (err) {
+    // ignore
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadComponent('link-box', 'link-box-root');
+});
 
 const setupAudio = (audioUrl) => {
   if (!loveAudio) return;
@@ -417,14 +636,49 @@ const triggerEffects = (targetLayer) => {
   }, 4200);
 };
 
+const triggerLanterns = (targetLayer, count = 6) => {
+  if (!targetLayer) return;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  for (let i = 0; i < count; i += 1) {
+    const lantern = document.createElement('div');
+    lantern.className = 'lantern';
+    const left = Math.random() * width;
+    lantern.style.left = `${left}px`;
+    lantern.style.top = `${height + 20 + Math.random() * 40}px`;
+    const distance = -(height * (0.6 + Math.random() * 0.4));
+    lantern.style.setProperty('--lantern-distance', `${distance}px`);
+    const dur = 6000 + Math.random() * 6000;
+    lantern.style.setProperty('--lantern-duration', `${dur}ms`);
+    lantern.style.setProperty('--lantern-sway', `${2 + Math.random() * 2}s`);
+
+    const body = document.createElement('div');
+    body.className = 'lantern-body';
+    const frame = document.createElement('div');
+    frame.className = 'lantern-frame';
+    const flame = document.createElement('div');
+    flame.className = 'lantern-flame';
+
+    lantern.appendChild(frame);
+    lantern.appendChild(body);
+    lantern.appendChild(flame);
+
+    targetLayer.appendChild(lantern);
+
+    // remove after animation ends
+    setTimeout(() => {
+      lantern.remove();
+    }, dur + 200);
+  }
+};
+
 const updateHeaderLine = (name, sender, receiver) => {
-  const lead = document.querySelector(".lead");
-  if (!lead) return;
   const cleanSender = (sender || "Người gửi").toLowerCase();
   const cleanReceiver = (receiver || "người nhận").toLowerCase();
-  const phr = `${cleanSender} gửi ${cleanReceiver} ${name || ""} lời chúc đầu năm an lành và đầy yêu thương.`;
-  lead.innerHTML = `<span class="heart-text">${phr}</span>`;
-  subGreeting.textContent = `${cleanSender} mong ${cleanReceiver} ${name || ""} luôn rực rỡ, bình an và tràn ngập yêu thương.`;
+  if (subGreeting) {
+    subGreeting.textContent = `${cleanSender} mong ${cleanReceiver} ${name || ""} luôn rực rỡ, bình an và tràn ngập yêu thương.`;
+  }
 };
 
 const triggerNameFireworks = (targetLayer, name) => {
@@ -495,7 +749,7 @@ const triggerNameFall = (targetLayer, name) => {
   }
 };
 
-const startContinuousEffects = (targetLayer, name, createdAt) => {
+const startContinuousEffects = (targetLayer, name, createdAt, viewType = 'basic') => {
   stopContinuousEffects();
   const runCycle = () => {
     const remaining = EXPIRY_MS - (Date.now() - createdAt);
@@ -503,9 +757,13 @@ const startContinuousEffects = (targetLayer, name, createdAt) => {
       stopContinuousEffects();
       return;
     }
-    triggerEffects(targetLayer);
-    triggerNameFireworks(targetLayer, name);
-    triggerNameFall(targetLayer, name);
+    if (viewType === 'basic') {
+      triggerLanterns(targetLayer, 6);
+    } else {
+      triggerEffects(targetLayer);
+      triggerNameFireworks(targetLayer, name);
+      triggerNameFall(targetLayer, name);
+    }
   };
   runCycle();
   effectsTimer = setInterval(runCycle, 4500);

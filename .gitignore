@@ -1,2 +1,5 @@
 node_modules/
 data.db
+.env
+.env.*
+backend/.env

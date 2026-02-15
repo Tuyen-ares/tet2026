@@ -1,0 +1,116 @@
+.link-box {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 18px;
+  border: 1px dashed rgba(255, 214, 122, 0.4);
+}
+
+.wish-box {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  background: rgba(255, 244, 227, 0.1);
+  border: 1px solid rgba(255, 214, 122, 0.25);
+}
+
+.wish-text {
+  font-style: italic;
+}
+
+.wheel-wrap {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  margin: 0 auto;
+}
+
+.pointer {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 16px solid transparent;
+  border-right: 16px solid transparent;
+  border-bottom: 28px solid #ffd27d;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+  z-index: 2;
+}
+
+.pointer::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 12px;
+  height: 12px;
+  background: #ffd27d;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);
+}
+
+canvas {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 6px solid rgba(255, 214, 122, 0.6);
+}
+
+.spin-result {
+  font-size: 1.1rem;
+  color: #ffe8b6;
+}
+
+.audio-hidden {
+  display: none !important;
+}
+
+.audio-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.8));
+  z-index: 10;
+  text-align: center;
+}
+
+.audio-label {
+  margin-top: 1.25rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #ffe8b6;
+  text-transform: uppercase;
+}
+
+.audio-pulse {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 122, 0.5), rgba(255, 140, 80, 0.2));
+  box-shadow: 0 0 0 0 rgba(255, 214, 122, 0.6);
+  animation: pulseGlow 1.8s ease-out infinite;
+}
+
+.expired-box {
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background: rgba(255, 120, 120, 0.15);
+  border: 1px solid rgba(255, 120, 120, 0.4);
+}
+
+@keyframes pulseGlow {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 214, 122, 0.5);
+  }
+
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 24px rgba(255, 214, 122, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 214, 122, 0);
+  }
+}

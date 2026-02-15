@@ -1,0 +1,41 @@
+.card-glow {
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(255, 214, 122, 0.1), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 214, 122, 0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.section-title {
+  font-family: "DM Serif Display", serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.section-desc {
+  color: #f7e5c7;
+}
+
+.form-control,
+.form-control:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 214, 122, 0.3);
+  color: #fff7ea;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 247, 234, 0.7);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #f9b233, #f26b2f);
+  border: none;
+  color: #3a170c;
+  font-weight: 600;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #ffd27d, #ffad3d);
+  border: none;
+  color: #3a170c;
+  font-weight: 600;
+}

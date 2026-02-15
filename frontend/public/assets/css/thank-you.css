@@ -1,0 +1,22 @@
+#thankYouEffects {
+  z-index: 0;
+}
+
+#thankYouEffects .lantern-body {
+  background: radial-gradient(circle at 50% 30%, #666 0%, #262626 45%, #0a0a0a 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 -8px 24px rgba(255, 255, 255, 0.05);
+}
+
+#thankYouEffects .lantern-frame {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+#thankYouEffects .lantern-flame {
+  background: radial-gradient(circle, #f8f2d0 0%, #f8c76a 45%, #f0932b 75%);
+  box-shadow: 0 6px 15px rgba(240, 147, 43, 0.35);
+}
+
+main.container {
+  position: relative;
+  z-index: 2;
+}

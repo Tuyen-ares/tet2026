@@ -1,0 +1,60 @@
+DEPLOY BACKEND (Render + GitHub Actions)
+=======================================
+
+Mục tiêu
+- Tự động deploy backend từ GitHub lên Render mỗi khi push lên branch main.
+
+Yeu cau
+1) Tai khoan Render
+2) Du an da push len GitHub (branch main)
+3) Backend nam trong thu muc: backend/
+4) Repo da co file: .github/workflows/backend-deploy.yml
+
+Buoc 1: Tao Web Service tren Render
+1. Dang nhap Render Dashboard.
+2. New -> Web Service.
+3. Chon repo GitHub cua ban.
+4. Root Directory: backend
+5. Build Command: npm install
+6. Start Command: npm start
+7. Plan: Free
+8. Create Web Service.
+
+Buoc 2: Lay Deploy Hook URL
+1. Vao Render -> Web Service -> Settings.
+2. Tim muc "Deploy Hook".
+3. Create Deploy Hook va copy URL.
+
+Buoc 3: Tao GitHub Secret
+1. Vao repo GitHub -> Settings -> Secrets and variables -> Actions.
+2. New repository secret:
+   - RENDER_DEPLOY_HOOK_URL : URL deploy hook o buoc 2
+
+Buoc 4: Kiem tra workflow
+File: .github/workflows/backend-deploy.yml
+Noi dung can co (tom tat):
+- Goi curl POST toi RENDER_DEPLOY_HOOK_URL
+
+Neu da giong, bo qua buoc nay.
+
+Buoc 5: Push len GitHub
+1. Commit code moi nhat.
+2. Push len branch main.
+
+Buoc 6: Kiem tra Actions
+1. Vao tab Actions trong repo.
+2. Chon workflow "Deploy Backend to Heroku".
+3. Doi job chay xong (green).
+
+Buoc 7: Kiem tra app
+1. Vao Render -> Web Service -> Open.
+2. Duong dan mac dinh: https://<TEN_SERVICE>.onrender.com
+
+Test nhanh
+- Mo trang tao link: https://<TEN_SERVICE>.onrender.com/
+- Tao link, truy cap: https://<TEN_SERVICE>.onrender.com/c/<id>
+
+Luu y
+- Render free co the sleep, lan dau mo se cham.
+- Neu loi, xem log:
+  Render Dashboard -> Logs

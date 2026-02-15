@@ -3,12 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "start": "node server.js"
-  },
   "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
-    "sqlite3": "^5.1.7"
+    "mysql2": "^3.3.0",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "migrate": "npx sequelize-cli db:migrate",
+    "seed": "npx sequelize-cli db:seed:all",
+    "start:dev": "npm run migrate && npm start"
   }
 }
