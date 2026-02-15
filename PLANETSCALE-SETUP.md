@@ -3,9 +3,11 @@
 Mình đã đổi hướng: dùng Supabase (Postgres) để có lựa chọn miễn phí cho development và dễ tích hợp với Render.
 
 1) Tạo project Supabase
-- Vào https://app.supabase.com và tạo project mới (chọn region gần bạn). Ghi lại `Database URL` hoặc các thông số kết nối (host, port, database, user, password).
 
-2) Thêm thông tin kết nối vào Render (hoặc môi trường bạn dùng)
+- Vào <https://app.supabase.com> và tạo project mới (chọn region gần bạn). Ghi lại `Database URL` hoặc các thông số kết nối (host, port, database, user, password).
+
+1) Thêm thông tin kết nối vào Render (hoặc môi trường bạn dùng)
+
 - Trong dashboard Render cho service backend, vào `Environment` → `Environment Variables` và thêm:
 
 - `DB_DIALECT` = `postgres`
@@ -19,7 +21,8 @@ Mình đã đổi hướng: dùng Supabase (Postgres) để có lựa chọn mi�
 
 Lưu ý: Render có thể dùng `Secret`/`Environment` -> đảm bảo các biến không lộ.
 
-3) Cập nhật backend để dùng Postgres
+1) Cập nhật backend để dùng Postgres
+
 - Cài phụ thuộc: trong `backend/` chạy:
 
 ```bash
@@ -40,7 +43,8 @@ production: {
 }
 ```
 
-4) Chạy migration trên Render (Pre-deploy) hoặc thủ công
+1) Chạy migration trên Render (Pre-deploy) hoặc thủ công
+
 - Tốt nhất là chạy migrations trong bước Pre-deploy của Render hoặc qua job CI trước khi start server.
 - Lệnh chạy migration (từ thư mục `backend`):
 
@@ -50,10 +54,12 @@ npx sequelize-cli db:migrate --env production
 
 - Đảm bảo khi chạy lệnh trên, biến môi trường production (DB_HOST/DB_USER/DB_PASS/DB_NAME/DB_DIALECT) đã có giá trị.
 
-5) Kiểm tra và sửa code nếu cần
+1) Kiểm tra và sửa code nếu cần
+
 - Một số truy vấn SQL/MySQL-specific có thể cần điều chỉnh cho Postgres (ví dụ kiểu dữ liệu, limit/offset edge-cases). Kiểm tra các migration files và model definitions (`backend/models` và `migrations/`).
 
-6) Tối ưu cho concurrency
+1) Tối ưu cho concurrency
+
 - Postgres + Supabase xử lý kết nối khác MySQL. Đảm bảo pool trong `backend/src/config/database.js` phù hợp, ví dụ:
 
 ```js
@@ -65,13 +71,16 @@ pool: {
 }
 ```
 
-7) Tiến hành deploy
+1) Tiến hành deploy
+
 - Sau khi đặt env vars và cài `pg`, trigger deploy trên Render. Nếu migration nằm trong Pre-deploy, xem logs để xác nhận `db:migrate` thành công trước khi server start.
 
-8) Rollback / Troubleshoot
+1) Rollback / Troubleshoot
+
 - Nếu migration lỗi: kiểm tra logs, kiểm tra `DATABASE_URL`/credentials, và chạy migrations thủ công trên local hoặc trong một ephemeral container.
 
 Tổng kết: Supabase cho bạn tier miễn phí để dev/test; để lên production, cân nhắc backup/plan. Nếu bạn muốn, mình có thể:
+
 - tự động thêm `DB_POOL` config vào `backend/src/config/database.js` (patch),
 - hoặc tạo một `README_SUPABASE.md` với step-by-step và các lệnh cần thiết.
 

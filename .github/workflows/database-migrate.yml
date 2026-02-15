@@ -45,7 +45,7 @@ jobs:
           fi
 
       - name: Install deps
-        run: npm ci
+        run: npm install
 
       - name: Run migrations
         run: npx sequelize-cli db:migrate --env production

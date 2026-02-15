@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          npm ci
+          npm install
 
       - name: Run migrations
         env:
