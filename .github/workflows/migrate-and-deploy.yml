@@ -1,0 +1,59 @@
+name: Run migrations and trigger Render deploy
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+
+jobs:
+  migrate:
+    name: Run migrations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run migrations
+        env:
+          # Provide either DATABASE_URL or DB_* secrets
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          DB_DIALECT: postgres
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+        run: |
+          cd backend
+          npx sequelize-cli db:migrate --env production
+
+  deploy:
+    name: Trigger Render deploy
+    needs: migrate
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Trigger Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID" ]; then
+            echo "Render secrets not set — skipping deploy";
+            exit 0;
+          fi
+          curl -X POST \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}' \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys"

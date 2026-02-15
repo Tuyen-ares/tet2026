@@ -9,6 +9,8 @@
     "express": "^4.19.2",
     "helmet": "^7.1.0",
     "mysql2": "^3.3.0",
+    "pg": "^8.11.0",
+    "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
@@ -17,6 +19,7 @@
   "scripts": {
     "start": "node server.js",
     "migrate": "npx sequelize-cli db:migrate",
+    "migrate:prod": "npx sequelize-cli db:migrate --env production",
     "seed": "npx sequelize-cli db:seed:all",
     "start:dev": "npm run migrate && npm start"
   }
