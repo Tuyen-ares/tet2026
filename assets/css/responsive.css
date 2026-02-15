@@ -1,0 +1,11 @@
+@media (max-width: 768px) {
+  .wheel-wrap {
+    width: 260px;
+    height: 260px;
+  }
+
+  canvas {
+    width: 260px;
+    height: 260px;
+  }
+}

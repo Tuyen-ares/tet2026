@@ -1,0 +1,88 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Be Vietnam Pro", sans-serif;
+  color: #fff7ea;
+  background: radial-gradient(circle at top, #9f1d20, #4f0b0d 55%, #1b0a0a);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.noise {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.effects-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.display-title {
+  font-family: "DM Serif Display", serif;
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  margin-bottom: 0.5rem;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: #f9d784;
+}
+
+.lead {
+  color: #f7e5c7;
+  position: relative;
+}
+
+.heart-text {
+  position: relative;
+  display: inline-block;
+  padding: 6px 10px;
+  background: linear-gradient(90deg, rgba(255, 214, 122, 0.15), rgba(255, 120, 120, 0.12));
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.heart-text::after {
+  content: "❤ ❤ ❤ ❤ ❤";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  text-align: center;
+  color: rgba(255, 214, 122, 0.25);
+  letter-spacing: 0.6em;
+  animation: floatHearts 4s linear infinite;
+}
+
+.heart-text::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 214, 122, 0.18), transparent 45%);
+  opacity: 0.6;
+}
+
+@keyframes floatHearts {
+  0% {
+    transform: translate(-10%, -50%);
+  }
+
+  100% {
+    transform: translate(10%, -50%);
+  }
+}

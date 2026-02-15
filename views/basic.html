@@ -1,0 +1,30 @@
+<section id="card" class="card-glow p-4 p-md-5">
+  <div class="row g-4 align-items-center">
+    <div class="col-lg-6">
+      <p class="eyebrow">Gửi từ người thương</p>
+      <audio id="loveAudio" class="audio-hidden" preload="auto"></audio>
+      <h2 id="greeting" class="section-title"></h2>
+      <h3 id="cardTitle" class="card-subtitle"></h3>
+      <p id="subGreeting" class="section-desc"></p>
+      <div class="wish-box">
+        <p class="mb-2">Lời chúc đặc biệt:</p>
+        <p id="wishText" class="wish-text"></p>
+      </div>
+      <p id="expireNotice" class="small mt-3 mb-0"></p>
+      <div id="expiredBox" class="expired-box mt-4 d-none">
+        <h3 class="mb-2">Link đã hết hạn</h3>
+        <p class="mb-0">Link chỉ tồn tại 20 phút. Hãy tạo lại link mới nhé.</p>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <canvas id="wheel" width="320" height="320"></canvas>
+      </div>
+      <div class="text-center mt-3">
+        <button id="spinBtn" class="btn btn-warning btn-lg">Quay lì xì</button>
+        <p id="spinResult" class="spin-result mt-3">Nhấn quay để nhận lộc đầu năm!</p>
+      </div>
+    </div>
+  </div>
+</section>
