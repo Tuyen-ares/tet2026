@@ -2,7 +2,15 @@ name: Deploy Frontend to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: frontend-pages
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -11,6 +19,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate frontend files
+        run: |
+          test -f frontend/public/index.html
+          test -f frontend/public/thank-you.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
