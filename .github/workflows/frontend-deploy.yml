@@ -31,3 +31,9 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/public
           publish_branch: gh-pages
+
+      - name: Ensure .nojekyll (avoid GitHub Pages Jekyll processing)
+        run: |
+          mkdir -p frontend/public
+          touch frontend/public/.nojekyll
+        shell: bash
