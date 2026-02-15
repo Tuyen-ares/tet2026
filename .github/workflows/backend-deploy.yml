@@ -58,6 +58,7 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
         run: |
+          set -euo pipefail
           HOOK_URL="${RENDER_DEPLOY_HOOK_URL:-$LEGACY_RENDER_HOOK_URL}"
           if [ -n "$HOOK_URL" ]; then
             echo "Triggering Render via deploy hook..."
@@ -66,28 +67,32 @@ jobs:
               echo "Render deploy hook triggered successfully (HTTP ${HTTP_CODE})."
               exit 0
             fi
-            echo "Deploy hook failed with HTTP ${HTTP_CODE}. Trying API fallback..."
+            echo "Deploy hook failed with HTTP ${HTTP_CODE}. Showing response body:" 
+            sed -n '1,200p' /tmp/render_hook_body.txt || true
+            echo "Trying API fallback..."
           else
             echo "No deploy hook secret found. Trying API fallback..."
           fi
 
-          if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID" ]; then
-            echo "Missing Render API fallback secrets (RENDER_API_KEY, RENDER_SERVICE_ID)."
-            echo "Set a valid RENDER_DEPLOY_HOOK_URL from Render Dashboard > Service > Settings > Deploy Hook."
-            exit 1
+          if [ -z "${RENDER_API_KEY:-}" ] || [ -z "${RENDER_SERVICE_ID:-}" ]; then
+            echo "Missing Render deploy secrets (no hook and no API credentials). Skipping remote deploy." 
+            echo "To enable automatic deploys, set a RENDER_DEPLOY_HOOK_URL or RENDER_API_KEY and RENDER_SERVICE_ID in repo secrets."
+            exit 0
           fi
 
+          echo "Triggering Render deploy via API..."
           HTTP_CODE=$(curl -sS -o /tmp/render_api_body.txt -w "%{http_code}" -X POST \
             "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
             -H "Content-Type: application/json" \
-            -d '{"clearCache":"do_not_clear"}' || true)
+            -d '{"clearCache":true}' || true)
 
           if [ "${HTTP_CODE}" -ge 200 ] && [ "${HTTP_CODE}" -lt 300 ]; then
             echo "Render deploy triggered via API fallback (HTTP ${HTTP_CODE})."
+            sed -n '1,200p' /tmp/render_api_body.txt || true
             exit 0
           fi
 
-          echo "Render API fallback failed with HTTP ${HTTP_CODE}."
-          cat /tmp/render_api_body.txt || true
+          echo "Render API fallback failed with HTTP ${HTTP_CODE}. Response body:" 
+          sed -n '1,400p' /tmp/render_api_body.txt || true
           exit 1
