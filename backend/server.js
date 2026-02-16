@@ -50,12 +50,11 @@ app.use("/api", createLinkRoutes(linkController));
 
 // simple error handler middleware
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error("Request error:", err);
   if (err && err.code) {
-    res.status(err.statusCode || 400).json({ error: err.code, message: err.message });
-    return;
+    return res.status(err.statusCode || 400).json({ error: err.code, message: err.message });
   }
-  res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+  res.status(500).json({ error: "INTERNAL_SERVER_ERROR", message: err?.message || "Unknown error" });
 });
 
 const start = async () => {
