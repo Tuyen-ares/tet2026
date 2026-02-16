@@ -8,7 +8,7 @@ if (isLocalHost) {
   window.__API_BASE__ = "http://localhost:3000";
 } else if (isGithubPagesHost) {
   // IMPORTANT: replace with your actual Render backend URL.
-  window.__API_BASE__ = "https://tet2026.onrender.com";
+  window.__API_BASE__ = "https://tet2026-wm4l.onrender.com";
 } else {
   // Same-origin for environments where frontend and backend share a domain.
   window.__API_BASE__ = "";
