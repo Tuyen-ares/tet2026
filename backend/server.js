@@ -23,6 +23,15 @@ app.use(
 );
 app.use(cors({ origin: env.corsOrigins }));
 
+// Health endpoints for platform checks (Render, uptime monitors)
+app.get("/", (req, res) => {
+  res.status(200).send("OK");
+});
+
+app.get("/healthz", (req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 const linkRepository = new LinkRepository();
 const linkService = new LinkService(linkRepository);
 const linkController = new LinkController(linkService);
