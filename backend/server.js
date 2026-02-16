@@ -21,7 +21,21 @@ app.use(
     referrerPolicy: { policy: "no-referrer-when-downgrade" },
   })
 );
-app.use(cors({ origin: env.corsOrigins }));
+
+const allowedOrigins = String(env.corsOrigins || "*")
+  .split(",")
+  .map((item) => item.trim())
+  .filter(Boolean);
+
+const corsOrigin = (origin, callback) => {
+  if (!origin) return callback(null, true);
+  if (allowedOrigins.includes("*")) return callback(null, true);
+  if (allowedOrigins.includes(origin)) return callback(null, true);
+  return callback(new Error(`CORS_BLOCKED: ${origin}`));
+};
+
+app.use(cors({ origin: corsOrigin }));
+app.options("*", cors({ origin: corsOrigin }));
 
 // Health endpoints for platform checks (Render, uptime monitors)
 app.get("/", (req, res) => {
