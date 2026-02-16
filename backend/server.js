@@ -1,6 +1,5 @@
 import express from "express";
 import helmet from "helmet";
-import cors from "cors";
 
 import { env } from "./src/config/env.js";
 import { sequelize } from "./src/config/database.js";
@@ -22,29 +21,17 @@ app.use(
   })
 );
 
-const allowedOrigins = String(env.corsOrigins || "*")
-  .split(",")
-  .map((item) => item.trim())
-  .filter(Boolean);
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-const corsOptions =
-  allowedOrigins.includes("*")
-    ? {
-        origin: "*",
-        methods: ["GET", "POST", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-      }
-    : {
-        origin(origin, callback) {
-          if (!origin) return callback(null, true);
-          return callback(null, allowedOrigins.includes(origin));
-        },
-        methods: ["GET", "POST", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-      };
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+  return next();
+});
 
 // Health endpoints for platform checks (Render, uptime monitors)
 app.get("/", (req, res) => {
