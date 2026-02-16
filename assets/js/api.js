@@ -16,10 +16,21 @@
       const isGithubPagesHost = window.location.hostname.endsWith("github.io");
       const bases = [];
 
-      if (app.constants.API_BASE) bases.push(app.constants.API_BASE.replace(/\/$/, ""));
+      let configuredBase = app.constants.API_BASE ? app.constants.API_BASE.replace(/\/$/, "") : "";
+      // Auto-heal legacy Render domain that points to the wrong service.
+      if (configuredBase === "https://tet2026.onrender.com") {
+        configuredBase = "https://tet2026-wm4l.onrender.com";
+      }
+      if (configuredBase) bases.push(configuredBase);
 
       // Do not use same-origin API on GitHub Pages because it is static hosting.
       if (!isGithubPagesHost) bases.push("");
+
+      // Safety fallback for GitHub Pages when config.js is stale/cached.
+      // Keep the currently active backend URL here so API calls still work.
+      if (isGithubPagesHost) {
+        bases.push("https://tet2026-wm4l.onrender.com");
+      }
 
       if (isLocalHost) {
         bases.push("http://localhost:3000");
