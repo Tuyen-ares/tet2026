@@ -11,12 +11,20 @@
     },
 
     getApiBases() {
+      const isLocalHost =
+        window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const isGithubPagesHost = window.location.hostname.endsWith("github.io");
       const bases = [];
+
       if (app.constants.API_BASE) bases.push(app.constants.API_BASE.replace(/\/$/, ""));
-      bases.push("");
-      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+
+      // Do not use same-origin API on GitHub Pages because it is static hosting.
+      if (!isGithubPagesHost) bases.push("");
+
+      if (isLocalHost) {
         bases.push("http://localhost:3000");
       }
+
       return [...new Set(bases)];
     },
 
