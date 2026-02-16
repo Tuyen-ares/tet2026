@@ -27,15 +27,24 @@ const allowedOrigins = String(env.corsOrigins || "*")
   .map((item) => item.trim())
   .filter(Boolean);
 
-const corsOrigin = (origin, callback) => {
-  if (!origin) return callback(null, true);
-  if (allowedOrigins.includes("*")) return callback(null, true);
-  if (allowedOrigins.includes(origin)) return callback(null, true);
-  return callback(new Error(`CORS_BLOCKED: ${origin}`));
-};
+const corsOptions =
+  allowedOrigins.includes("*")
+    ? {
+        origin: "*",
+        methods: ["GET", "POST", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+      }
+    : {
+        origin(origin, callback) {
+          if (!origin) return callback(null, true);
+          return callback(null, allowedOrigins.includes(origin));
+        },
+        methods: ["GET", "POST", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+      };
 
-app.use(cors({ origin: corsOrigin }));
-app.options("*", cors({ origin: corsOrigin }));
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Health endpoints for platform checks (Render, uptime monitors)
 app.get("/", (req, res) => {
