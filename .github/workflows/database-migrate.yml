@@ -30,22 +30,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check DB secrets
+        id: check_secrets
+        run: |
+          if [ -z "$DB_HOST" ] || [ -z "$DB_USER" ] || [ -z "$DB_NAME" ] || [ -z "$DB_PASS" ] || [ -z "$DB_PORT" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "DB secrets are missing. Skipping migration."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Use Node.js 20
+        if: steps.check_secrets.outputs.ready == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: Validate DB secrets
-        run: |
-          if [ -z "$DB_HOST" ] || [ -z "$DB_USER" ] || [ -z "$DB_NAME" ]; then
-            echo "Missing DB secrets (DB_HOST, DB_USER, DB_NAME)."
-            exit 1
-          fi
-
       - name: Install deps
+        if: steps.check_secrets.outputs.ready == 'true'
         run: npm install
 
       - name: Run migrations
+        if: steps.check_secrets.outputs.ready == 'true'
         run: npx sequelize-cli db:migrate --env production
+
+      - name: Migration skipped
+        if: steps.check_secrets.outputs.ready != 'true'
+        run: echo "Skipped migration because GitHub secrets are not configured yet."

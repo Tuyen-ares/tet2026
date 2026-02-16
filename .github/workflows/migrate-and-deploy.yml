@@ -2,8 +2,6 @@ name: Run migrations and trigger Render deploy
 
 on:
   workflow_dispatch: {}
-  push:
-    branches: [ main ]
 
 jobs:
   migrate:
@@ -27,7 +25,7 @@ jobs:
         env:
           # Provide either DATABASE_URL or DB_* secrets
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
-          DB_DIALECT: postgres
+          DB_DIALECT: mysql
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_NAME: ${{ secrets.DB_NAME }}
@@ -35,6 +33,10 @@ jobs:
           DB_PASS: ${{ secrets.DB_PASS }}
         run: |
           cd backend
+          if [ -z "$DB_HOST" ] || [ -z "$DB_USER" ] || [ -z "$DB_NAME" ] || [ -z "$DB_PASS" ] || [ -z "$DB_PORT" ]; then
+            echo "DB secrets missing, skipping migration.";
+            exit 0;
+          fi
           npx sequelize-cli db:migrate --env production
 
   deploy:
