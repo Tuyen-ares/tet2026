@@ -1,4 +1,6 @@
 require('dotenv').config();
+const dbUrl = process.env.DATABASE_URL || process.env.DB_URL;
+if (!process.env.DATABASE_URL && dbUrl) process.env.DATABASE_URL = dbUrl;
 
 const common = {
   dialect: process.env.DB_DIALECT || 'mysql',
@@ -27,7 +29,8 @@ module.exports = {
     database: process.env.DB_NAME || 'namMoi_DB_test'
   }),
 
-  production: Object.assign({}, common, base, (process.env.DATABASE_URL ? {
+  production: Object.assign({}, common, base, (dbUrl ? {
+    url: dbUrl,
     use_env_variable: 'DATABASE_URL',
     dialectOptions: {
       ssl: {

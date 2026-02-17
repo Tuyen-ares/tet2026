@@ -3,13 +3,14 @@ import { env, dbConfig } from "./env.js";
 
 const poolMax = Number(process.env.DB_POOL_MAX || 10);
 const poolMin = Number(process.env.DB_POOL_MIN || 0);
+const dbUrl = process.env.DATABASE_URL || process.env.DB_URL;
 const dialect = process.env.DB_DIALECT || dbConfig.dialect || "mysql";
 const sslCa = process.env.DB_SSL_CA ? process.env.DB_SSL_CA.replace(/\\n/g, "\n") : undefined;
 const sslEnabled =
   process.env.DB_SSL === "true" ||
   process.env.DB_SSL_MODE === "require" ||
   Boolean(sslCa) ||
-  (process.env.DATABASE_URL && process.env.DATABASE_URL.includes("sslmode=require"));
+  (dbUrl && dbUrl.includes("sslmode=require"));
 const sslRejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false";
 
 const sequelizeOptions = {
@@ -38,8 +39,8 @@ const sequelizeOptions = {
 };
 
 let sequelize;
-if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL, sequelizeOptions);
+if (dbUrl) {
+  sequelize = new Sequelize(dbUrl, sequelizeOptions);
 } else {
   sequelize = new Sequelize(sequelizeOptions);
 }
