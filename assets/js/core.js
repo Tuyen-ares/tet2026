@@ -14,6 +14,11 @@
     segments: [...app.constants.baseSegments],
     currentAngle: 0,
     spinning: false,
+    currentCardId: null,
+    currentReceiverName: "",
+    currentViewType: "basic",
+    hasSpun: false,
+    prizeAmount: null,
     countdownTimer: null,
     currentMin: 1000,
     currentMax: 10000,
@@ -80,7 +85,7 @@
     },
 
     formatTypeLabel(type) {
-      if (type === "confess") return "Tỏ tình";
+      if (type === "confess") return "Tình yêu";
       if (type === "lucky") return "Lì xì";
       return "Chúc Tết";
     },
