@@ -90,10 +90,11 @@ export class LinkService {
     }
 
     const computePrize = (link) => {
-      const min = Number(link.min || 0);
-      const max = Number(link.max || 0);
-      const prize = Math.floor((min + max) / 2);
-      return prize;
+      const min = Math.max(1000, Math.floor(Number(link.min || 0) / 1000) * 1000);
+      const maxRaw = Math.floor(Number(link.max || 0) / 1000) * 1000;
+      const max = Math.max(min, maxRaw);
+      const steps = Math.floor((max - min) / 1000);
+      return min + Math.floor(Math.random() * (steps + 1)) * 1000;
     };
 
     const result = await this.linkRepository.spinOnce(id, computePrize);

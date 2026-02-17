@@ -8,4 +8,44 @@
     width: 260px;
     height: 260px;
   }
+
+  .lixi-card {
+    width: min(95vw, 350px);
+    min-height: 520px;
+  }
+
+  .lixi-envelope {
+    width: min(72vw, 222px);
+    height: 408px;
+  }
+
+  .lixi-slip-wrap {
+    top: 28px;
+    width: min(60vw, 178px);
+    height: 326px;
+  }
+
+  .lixi-slip {
+    height: 326px;
+  }
+
+  .lixi-seal {
+    width: 86px;
+    height: 32px;
+    top: 84px;
+  }
+
+  .lixi-art-medallion {
+    width: 120px;
+    height: 120px;
+    font-size: 3.8rem;
+  }
+
+  .lixi-art-calligraphy {
+    font-size: 2.1rem;
+  }
+
+  .lixi-message {
+    font-size: 0.9rem;
+  }
 }

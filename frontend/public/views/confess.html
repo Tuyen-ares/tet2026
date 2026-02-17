@@ -1,11 +1,11 @@
 <section id="card" class="card-glow p-4 p-md-5 confess-view">
   <div class="row g-4 align-items-center">
     <div class="col-lg-6">
-      <p class="eyebrow">Tỏ tình • Gửi lời yêu</p>
+      <p class="eyebrow">Tình yêu • Gửi lời yêu</p>
       <audio id="loveAudio" class="audio-hidden" preload="auto"></audio>
       <h2 id="greeting" class="section-title">Em ơi, nghe này...</h2>
       <h3 id="cardTitle" class="card-subtitle"></h3>
-      <p id="subGreeting" class="section-desc">Một lời tỏ tình nhẹ nhàng cho người đặc biệt.</p>
+      <p id="subGreeting" class="section-desc">Một lời yêu thương nhẹ nhàng cho người đặc biệt.</p>
       <div class="wish-box">
         <p class="mb-2">Lời nhắn:</p>
         <p id="wishText" class="wish-text"></p>
@@ -16,13 +16,14 @@
         <p class="mb-0">Link chỉ tồn tại 20 phút. Hãy tạo lại link mới nhé.</p>
       </div>
     </div>
-    <div class="col-lg-6 text-center">
-      <div class="confess-illustration">
-        <!-- decorative heart or image could go here -->
+    <div class="col-lg-6">
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <canvas id="wheel" width="320" height="320"></canvas>
       </div>
       <div class="text-center mt-3">
-        <button id="spinBtn" class="btn btn-danger btn-lg">Gửi lời yêu</button>
-        <p id="spinResult" class="spin-result mt-3">Nhấn để hiện lời tỏ tình.</p>
+        <button id="spinBtn" class="btn btn-warning btn-lg">Quay lì xì</button>
+        <p id="spinResult" class="spin-result mt-3">Nhấn quay để nhận lộc đầu năm!</p>
       </div>
     </div>
   </div>

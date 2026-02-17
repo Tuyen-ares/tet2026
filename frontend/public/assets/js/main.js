@@ -16,6 +16,9 @@
     if (app.state.view.wishText) app.state.view.wishText.textContent = wish;
 
     app.effects.startContinuousEffects(app.dom.effectsLayer, name, createdAt, viewType);
+    if (app.wheel && typeof app.wheel.syncFromState === "function") {
+      app.wheel.syncFromState();
+    }
 
     const updateCountdown = () => {
       if (!app.state.view.expireNotice) return;
@@ -73,6 +76,11 @@
       app.state.currentMin = data.min || 1000;
       app.state.currentMax = data.max || 10000;
       const viewType = data.type || "basic";
+      app.state.currentCardId = data.id || cardId;
+      app.state.currentReceiverName = data.name || "";
+      app.state.currentViewType = viewType;
+      app.state.hasSpun = !!data.hasSpun;
+      app.state.prizeAmount = data.prizeAmount ?? null;
 
       await app.views.loadViewFragment(viewType);
       app.utils.applyReceiverHeader({
