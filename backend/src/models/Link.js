@@ -49,6 +49,10 @@ Link.init(
       type: DataTypes.STRING(100),
       allowNull: true,
     },
+    theme: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     prizeAmount: {
       type: DataTypes.INTEGER,
       allowNull: true,

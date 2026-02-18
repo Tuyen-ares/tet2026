@@ -1,6 +1,6 @@
 import { env } from "../config/env.js";
 import { NotFoundError, ValidationError } from "../errors/AppError.js";
-import { generateId, normalizeMinMax, safeInt } from "../utils/linkUtils.js";
+import { generateId, normalizeMinMax, parseStoredTheme, safeInt, sanitizeThemeInput } from "../utils/linkUtils.js";
 
 export class LinkService {
   constructor(linkRepository) {
@@ -15,6 +15,7 @@ export class LinkService {
     const sender = String(payload?.sender || "").trim();
     const receiver = String(payload?.receiver || "").trim();
     const type = String(payload?.type || "basic").trim() || "basic";
+    const theme = sanitizeThemeInput(payload?.theme);
 
     if (!name) {
       throw new ValidationError("NAME_REQUIRED", "Name is required.");
@@ -38,6 +39,7 @@ export class LinkService {
       audio,
       sender,
       receiver,
+      theme: JSON.stringify(theme),
       createdAt,
     });
 
@@ -74,6 +76,7 @@ export class LinkService {
       audio: link.audio || "",
       sender: link.sender || "",
       receiver: link.receiver || "",
+      theme: parseStoredTheme(link.theme),
       createdAt: link.createdAt instanceof Date ? link.createdAt.getTime() : new Date(link.createdAt).getTime(),
       expiresAt,
       expired: Date.now() > expiresAt,

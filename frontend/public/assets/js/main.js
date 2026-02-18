@@ -1,14 +1,120 @@
 (() => {
   const app = window.TetApp;
+  let themeBuilderWired = false;
+  let previewFrameLoaded = false;
+  const searchParams = new URLSearchParams(window.location.search);
+  const isPreviewMode = searchParams.get("preview") === "1";
+
+  const buildPreviewPayload = () => {
+    const name = (document.getElementById("loverName") || {}).value?.trim() || "Người thương";
+    const title = (document.getElementById("cardTitleInput") || {}).value?.trim() || "";
+    const wish = (document.getElementById("wishContent") || {}).value?.trim() || "";
+    const type = (document.getElementById("pageType") || {}).value || "basic";
+    const sender = app.dom.senderPronounInput?.value?.trim() || "Người gửi";
+    const receiver = app.dom.receiverPronounInput?.value?.trim() || "người nhận";
+    const min = Number((document.getElementById("minLuck") || {}).value) || 1000;
+    const max = Number((document.getElementById("maxLuck") || {}).value) || 10000;
+    const theme = app.utils.readThemeInputs();
+    return { name, title, wish, type, sender, receiver, min, max, theme };
+  };
+
+  const postPreviewPayload = () => {
+    const frame = app.dom.fullPagePreviewFrame;
+    if (!frame?.contentWindow) return;
+    frame.contentWindow.postMessage(
+      {
+        source: "theme-preview",
+        payload: buildPreviewPayload(),
+      },
+      window.location.origin
+    );
+  };
+
+  const ensurePreviewFrame = () => {
+    const frame = app.dom.fullPagePreviewFrame;
+    if (!frame || frame.src) return;
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("preview", "1");
+    frame.src = url.toString();
+    frame.addEventListener("load", () => {
+      previewFrameLoaded = true;
+      postPreviewPayload();
+    });
+  };
+
+  const wireThemeBuilder = () => {
+    if (themeBuilderWired) return;
+    themeBuilderWired = true;
+
+    const themeInputs = [
+      app.dom.themePageBgInput,
+      app.dom.themeCardBgInput,
+      app.dom.themeTextColorInput,
+      app.dom.themeButtonBgInput,
+      app.dom.themeButtonTextInput,
+    ].filter(Boolean);
+
+    const refreshPreview = () => {
+      app.utils.applyThemeToPreview(app.utils.readThemeInputs());
+      if (previewFrameLoaded) postPreviewPayload();
+    };
+
+    themeInputs.forEach((input) => {
+      input.addEventListener("input", refreshPreview);
+      input.addEventListener("change", refreshPreview);
+    });
+
+    const contentInputs = [
+      document.getElementById("loverName"),
+      document.getElementById("cardTitleInput"),
+      document.getElementById("pageType"),
+      document.getElementById("wishContent"),
+      app.dom.senderPronounInput,
+      app.dom.receiverPronounInput,
+      document.getElementById("minLuck"),
+      document.getElementById("maxLuck"),
+    ].filter(Boolean);
+
+    contentInputs.forEach((input) => {
+      input.addEventListener("input", () => previewFrameLoaded && postPreviewPayload());
+      input.addEventListener("change", () => previewFrameLoaded && postPreviewPayload());
+    });
+
+    app.dom.advancedCustomizeBtn?.addEventListener("click", () => {
+      const panel = app.dom.advancedCustomizer;
+      if (!panel) return;
+      panel.classList.toggle("d-none");
+      const isOpen = !panel.classList.contains("d-none");
+      if (app.dom.advancedCustomizeBtn) {
+        app.dom.advancedCustomizeBtn.textContent = isOpen ? "Ẩn tùy chỉnh nâng cao" : "Tùy chỉnh nâng cao";
+      }
+      if (isOpen) {
+        ensurePreviewFrame();
+        setTimeout(postPreviewPayload, 40);
+      }
+    });
+
+    app.dom.themeResetBtn?.addEventListener("click", () => {
+      app.utils.resetThemeInputs();
+      if (previewFrameLoaded) postPreviewPayload();
+    });
+
+    app.utils.resetThemeInputs();
+    ensurePreviewFrame();
+  };
 
   const showBuilder = () => {
     app.utils.applyBuilderHeader();
+    wireThemeBuilder();
     if (app.dom.builderSection) app.dom.builderSection.classList.remove("d-none");
     if (app.state.view.cardSection) app.state.view.cardSection.classList.add("d-none");
     app.effects.startContinuousEffects(app.dom.effectsBuilder, "Yêu", Date.now());
   };
 
-  const showCard = (name, createdAt, wish, title, viewType = "basic") => {
+  const showCard = (name, createdAt, wish, title, viewType = "basic", options = {}) => {
+    const { showCountdown = true } = options;
     if (app.dom.builderSection) app.dom.builderSection.classList.add("d-none");
     if (app.state.view.cardSection) app.state.view.cardSection.classList.remove("d-none");
     if (app.state.view.greeting) app.state.view.greeting.textContent = `Chúc mừng năm mới, ${name}!`;
@@ -42,6 +148,15 @@
         .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
     };
 
+    if (!showCountdown) {
+      if (app.state.countdownTimer) {
+        clearInterval(app.state.countdownTimer);
+        app.state.countdownTimer = null;
+      }
+      if (app.state.view.expireNotice) app.state.view.expireNotice.textContent = "Chế độ xem trước";
+      return;
+    }
+
     updateCountdown();
     app.state.countdownTimer = setInterval(updateCountdown, 1000);
   };
@@ -55,7 +170,61 @@
     return match ? match[1] : null;
   };
 
+  const renderPreviewMode = async (payload = {}) => {
+    const merged = {
+      name: "Người thương",
+      title: "",
+      wish: "",
+      type: "basic",
+      sender: "Người gửi",
+      receiver: "người nhận",
+      theme: app.constants.DEFAULT_THEME,
+      ...payload,
+    };
+
+    const viewType = merged.type || "basic";
+    if (!app.state.view.cardSection || app.state.currentViewType !== viewType) {
+      await app.views.loadViewFragment(viewType);
+    }
+
+    app.state.currentViewType = viewType;
+    app.state.currentCardId = null;
+    app.state.currentReceiverName = merged.name;
+    app.state.hasSpun = false;
+    app.state.prizeAmount = null;
+
+    const wish =
+      (merged.wish ? merged.wish : "").trim().replace(/{name}/gi, merged.name) ||
+      app.constants.DEFAULT_WISH.replace(/{name}/g, merged.name);
+
+    app.utils.applyTheme(merged.theme);
+    app.utils.applyReceiverHeader({
+      name: merged.name,
+      title: merged.title,
+      wish,
+      type: viewType,
+      sender: merged.sender,
+      receiver: merged.receiver,
+    });
+    app.utils.updateHeaderLine(merged.name, merged.sender, merged.receiver);
+    app.audio.setupAudio("");
+    showCard(merged.name, Date.now(), wish, merged.title, viewType, { showCountdown: false });
+  };
+
   const parseLink = async () => {
+    if (isPreviewMode) {
+      await renderPreviewMode({
+        type: searchParams.get("type") || "basic",
+        name: searchParams.get("name") || "Người thương",
+      });
+      window.addEventListener("message", (event) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.source !== "theme-preview") return;
+        renderPreviewMode(event.data.payload || {});
+      });
+      return;
+    }
+
     const cardId = getCardId();
     if (!cardId) {
       showBuilder();
@@ -81,8 +250,10 @@
       app.state.currentViewType = viewType;
       app.state.hasSpun = !!data.hasSpun;
       app.state.prizeAmount = data.prizeAmount ?? null;
+      app.state.currentTheme = app.utils.normalizeTheme(data.theme);
 
       await app.views.loadViewFragment(viewType);
+      app.utils.applyTheme(app.state.currentTheme);
       app.utils.applyReceiverHeader({
         name: data.name,
         title: data.title,
@@ -101,7 +272,7 @@
     }
   };
 
-  if (app.dom.linkForm) {
+  if (app.dom.linkForm && !isPreviewMode) {
     app.dom.linkForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
@@ -115,6 +286,7 @@
       const minInput = Number((document.getElementById("minLuck") || {}).value) || 1000;
       const maxInput = Number((document.getElementById("maxLuck") || {}).value) || 10000;
       const { safeMin, safeMax } = app.utils.normalizeMinMax(minInput, maxInput);
+      const theme = app.utils.readThemeInputs();
       app.state.currentMin = safeMin;
       app.state.currentMax = safeMax;
 
@@ -135,6 +307,7 @@
             type: (document.getElementById("pageType") || {}).value || "basic",
             min: app.state.currentMin,
             max: app.state.currentMax,
+            theme,
           }),
         });
 
@@ -151,6 +324,6 @@
   parseLink();
 
   document.addEventListener("DOMContentLoaded", () => {
-    app.views.loadComponent("link-box", "link-box-root");
+    if (!isPreviewMode) app.views.loadComponent("link-box", "link-box-root");
   });
 })();
