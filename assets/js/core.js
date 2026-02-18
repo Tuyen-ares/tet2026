@@ -8,6 +8,13 @@
     DEFAULT_WISH:
       "Năm mới mở ra một hành trình mới, mong {name} luôn đủ mạnh mẽ để theo đuổi điều mình tin, đủ dịu dàng để giữ lại những điều đẹp nhất và đủ may mắn để hạnh phúc luôn ở cạnh.",
     API_BASE: (typeof window !== "undefined" && window.__API_BASE__) || "",
+    DEFAULT_THEME: {
+      pageBg: "#7f161a",
+      textColor: "#fff7ea",
+      buttonBg: "#f3bb63",
+      buttonText: "#5b1a0f",
+      cardBg: "#7a1217",
+    },
   };
 
   app.state = {
@@ -22,6 +29,7 @@
     countdownTimer: null,
     currentMin: 1000,
     currentMax: 10000,
+    currentTheme: null,
     lastActiveIndex: null,
     effectsTimer: null,
     hasRedirectedToThankYou: false,
@@ -52,6 +60,15 @@
     pageEyebrow: document.querySelector(".eyebrow"),
     pageTitle: document.querySelector(".display-title"),
     pageLead: document.querySelector(".lead"),
+    themePageBgInput: document.getElementById("themePageBg"),
+    themeCardBgInput: document.getElementById("themeCardBg"),
+    themeTextColorInput: document.getElementById("themeTextColor"),
+    themeButtonBgInput: document.getElementById("themeButtonBg"),
+    themeButtonTextInput: document.getElementById("themeButtonText"),
+    themeResetBtn: document.getElementById("themeResetBtn"),
+    advancedCustomizeBtn: document.getElementById("advancedCustomizeBtn"),
+    advancedCustomizer: document.getElementById("advancedCustomizer"),
+    fullPagePreviewFrame: document.getElementById("fullPagePreviewFrame"),
   };
 
   app.defaultHeader = {
@@ -61,6 +78,72 @@
   };
 
   app.utils = {
+    sanitizeHexColor(value, fallback) {
+      const text = String(value || "").trim();
+      return /^#([0-9a-f]{6})$/i.test(text) ? text.toLowerCase() : fallback;
+    },
+
+    normalizeTheme(themeInput) {
+      const source = typeof themeInput === "object" && themeInput ? themeInput : {};
+      const defaults = app.constants.DEFAULT_THEME;
+      return {
+        pageBg: this.sanitizeHexColor(source.pageBg, defaults.pageBg),
+        textColor: this.sanitizeHexColor(source.textColor, defaults.textColor),
+        buttonBg: this.sanitizeHexColor(source.buttonBg, defaults.buttonBg),
+        buttonText: this.sanitizeHexColor(source.buttonText, defaults.buttonText),
+        cardBg: this.sanitizeHexColor(source.cardBg, defaults.cardBg),
+      };
+    },
+
+    themeToCss(theme) {
+      return {
+        "--theme-page-bg": theme.pageBg,
+        "--theme-text-color": theme.textColor,
+        "--theme-btn-bg": theme.buttonBg,
+        "--theme-btn-text": theme.buttonText,
+        "--theme-card-bg": `linear-gradient(145deg, ${theme.cardBg}, rgba(0, 0, 0, 0.35))`,
+      };
+    },
+
+    applyTheme(themeInput) {
+      const theme = this.normalizeTheme(themeInput);
+      app.state.currentTheme = theme;
+      const cssVars = this.themeToCss(theme);
+      Object.entries(cssVars).forEach(([key, value]) => {
+        document.documentElement.style.setProperty(key, value);
+      });
+      return theme;
+    },
+
+    applyThemeToPreview(themeInput) {
+      // Full-page preview is handled via iframe postMessage in main.js.
+      return this.normalizeTheme(themeInput);
+    },
+
+    setThemeInputs(themeInput) {
+      const theme = this.normalizeTheme(themeInput);
+      if (app.dom.themePageBgInput) app.dom.themePageBgInput.value = theme.pageBg;
+      if (app.dom.themeCardBgInput) app.dom.themeCardBgInput.value = theme.cardBg;
+      if (app.dom.themeTextColorInput) app.dom.themeTextColorInput.value = theme.textColor;
+      if (app.dom.themeButtonBgInput) app.dom.themeButtonBgInput.value = theme.buttonBg;
+      if (app.dom.themeButtonTextInput) app.dom.themeButtonTextInput.value = theme.buttonText;
+    },
+
+    readThemeInputs() {
+      return this.normalizeTheme({
+        pageBg: app.dom.themePageBgInput?.value,
+        cardBg: app.dom.themeCardBgInput?.value,
+        textColor: app.dom.themeTextColorInput?.value,
+        buttonBg: app.dom.themeButtonBgInput?.value,
+        buttonText: app.dom.themeButtonTextInput?.value,
+      });
+    },
+
+    resetThemeInputs() {
+      this.setThemeInputs(app.constants.DEFAULT_THEME);
+      this.applyThemeToPreview(app.constants.DEFAULT_THEME);
+    },
+
     formatVnd(value) {
       return `${value.toLocaleString("vi-VN")}đ`;
     },
@@ -92,6 +175,8 @@
 
     applyBuilderHeader() {
       document.body.classList.remove("receiver-mode");
+      this.applyTheme(app.constants.DEFAULT_THEME);
+      this.resetThemeInputs();
       if (app.dom.pageEyebrow) app.dom.pageEyebrow.textContent = app.defaultHeader.eyebrow;
       if (app.dom.pageTitle) app.dom.pageTitle.textContent = app.defaultHeader.title;
       if (app.dom.pageLead) app.dom.pageLead.textContent = app.defaultHeader.lead;

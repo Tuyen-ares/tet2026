@@ -112,42 +112,44 @@
               </div>
             </div>
             <div class="col-md-6">
-              <label for="senderPronoun" class="form-label">Xưng hô của người gửi</label>
-              <select id="senderPronoun" class="form-select">
-                <option>Con</option>
-                <option>Cháu</option>
-                <option>Anh</option>
-                <option>Em</option>
-                <option>Tao</option>
-                <option>Tớ</option>
-                <option>Chú</option>
-                <option>Bác</option>
-                <option>Dì</option>
-                <option>Mẹ</option>
-                <option>Ba</option>
-                <option>Cha</option>
-                <option>Má</option>
-                <option>Tía</option>
-              </select>
+              <label for="senderPronoun" class="form-label">Xưng hô của người gửi (nhập hoặc chọn)</label>
+              <input id="senderPronoun" class="form-control" list="senderPronounOptions" placeholder="Ví dụ: Anh" />
+              <datalist id="senderPronounOptions">
+                <option value="Con"></option>
+                <option value="Cháu"></option>
+                <option value="Anh"></option>
+                <option value="Em"></option>
+                <option value="Tao"></option>
+                <option value="Tớ"></option>
+                <option value="Chú"></option>
+                <option value="Bác"></option>
+                <option value="Dì"></option>
+                <option value="Mẹ"></option>
+                <option value="Ba"></option>
+                <option value="Cha"></option>
+                <option value="Má"></option>
+                <option value="Tía"></option>
+              </datalist>
             </div>
             <div class="col-md-6">
-              <label for="receiverPronoun" class="form-label">Xưng hô của người nhận</label>
-              <select id="receiverPronoun" class="form-select">
-                <option>Mẹ</option>
-                <option>Ba</option>
-                <option>Cha</option>
-                <option>Má</option>
-                <option>Tía</option>
-                <option>Anh</option>
-                <option>Em</option>
-                <option>Con</option>
-                <option>Cháu</option>
-                <option>Bạn</option>
-                <option>Chú</option>
-                <option>Bác</option>
-                <option>Dì</option>
-                <option>Thím</option>
-              </select>
+              <label for="receiverPronoun" class="form-label">Xưng hô của người nhận (nhập hoặc chọn)</label>
+              <input id="receiverPronoun" class="form-control" list="receiverPronounOptions" placeholder="Ví dụ: Em" />
+              <datalist id="receiverPronounOptions">
+                <option value="Mẹ"></option>
+                <option value="Ba"></option>
+                <option value="Cha"></option>
+                <option value="Má"></option>
+                <option value="Tía"></option>
+                <option value="Anh"></option>
+                <option value="Em"></option>
+                <option value="Con"></option>
+                <option value="Cháu"></option>
+                <option value="Bạn"></option>
+                <option value="Chú"></option>
+                <option value="Bác"></option>
+                <option value="Dì"></option>
+                <option value="Thím"></option>
+              </datalist>
             </div>
             <div class="col-md-6">
               <label for="minLuck" class="form-label">Lì xì tối thiểu (VND)</label>
@@ -157,15 +159,60 @@
               <label for="maxLuck" class="form-label">Lì xì tối đa (VND)</label>
               <input type="number" class="form-control" id="maxLuck" placeholder="10000" min="1000" step="1000" />
             </div>
+            <div class="col-12">
+              <button type="button" id="advancedCustomizeBtn" class="btn btn-outline-light w-100">Tùy chỉnh nâng cao</button>
+            </div>
           </form>
         </div>
         <div class="col-lg-5">
           <div id="link-box-root"></div>
         </div>
+        <div id="advancedCustomizer" class="col-12 d-none">
+          <div class="advanced-customizer mt-2">
+            <div class="theme-builder">
+              <h3 class="theme-builder-title">Tùy chỉnh màu trang</h3>
+              <p class="theme-builder-desc">Màu bạn chọn sẽ áp dụng vào trang người nhận ngay trong khung xem trước bên dưới.</p>
+              <div class="row g-3">
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                  <label for="themePageBg" class="form-label">Nền trang</label>
+                  <input type="color" class="form-control form-control-color w-100" id="themePageBg" value="#7f161a" />
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                  <label for="themeCardBg" class="form-label">Nền khung</label>
+                  <input type="color" class="form-control form-control-color w-100" id="themeCardBg" value="#7a1217" />
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                  <label for="themeTextColor" class="form-label">Màu chữ</label>
+                  <input type="color" class="form-control form-control-color w-100" id="themeTextColor" value="#fff7ea" />
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                  <label for="themeButtonBg" class="form-label">Màu nút</label>
+                  <input type="color" class="form-control form-control-color w-100" id="themeButtonBg" value="#f3bb63" />
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                  <label for="themeButtonText" class="form-label">Chữ nút</label>
+                  <input type="color" class="form-control form-control-color w-100" id="themeButtonText" value="#5b1a0f" />
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2 d-grid align-items-end">
+                  <button type="button" id="themeResetBtn" class="btn btn-outline-light btn-sm mt-sm-4">Mặc định</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="theme-live-preview mt-3">
+              <p class="theme-live-preview-title">Xem trước toàn bộ trang người nhận</p>
+              <iframe id="fullPagePreviewFrame" class="theme-live-frame" title="Xem trước trang người nhận"></iframe>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
     <div id="view-root"></div>
   </main>
+  <footer class="site-footer">
+    <p class="site-footer-line">La Hoàn Tuyên • Chúc bạn bình an, may mắn và hạnh phúc • Nhà ráng tạo nội dung đã tạo
+      web này</p>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="config.js?v=20260216b"></script>

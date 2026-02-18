@@ -19,6 +19,16 @@
     height: 408px;
   }
 
+  .lixi-flap {
+    width: min(72vw, 222px);
+    height: 98px;
+    border-radius: 0 0 128px 128px;
+  }
+
+  .lixi-envelope::before {
+    top: 90px;
+  }
+
   .lixi-slip-wrap {
     top: 28px;
     width: min(60vw, 178px);
@@ -32,7 +42,7 @@
   .lixi-seal {
     width: 86px;
     height: 32px;
-    top: 84px;
+    top: 78px;
   }
 
   .lixi-art-medallion {
@@ -47,5 +57,9 @@
 
   .lixi-message {
     font-size: 0.9rem;
+  }
+
+  .theme-live-frame {
+    height: 640px;
   }
 }
