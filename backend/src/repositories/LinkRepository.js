@@ -11,13 +11,26 @@ export class LinkRepository {
   }
 
   async deleteExpired(threshold) {
-    return Link.destroy({
-      where: {
-        createdAt: {
-          [Op.lt]: threshold,
+    try {
+      return await Link.destroy({
+        where: {
+          isUnlimited: false,
+          createdAt: {
+            [Op.lt]: threshold,
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      // Backward-compatible fallback for databases that haven't added `is_unlimited` yet.
+      if (error?.original?.code !== "ER_BAD_FIELD_ERROR") throw error;
+      return Link.destroy({
+        where: {
+          createdAt: {
+            [Op.lt]: threshold,
+          },
+        },
+      });
+    }
   }
 
   async spinOnce(id, computePrizeFn) {

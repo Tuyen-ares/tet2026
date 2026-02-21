@@ -2,6 +2,10 @@ import { env } from "../config/env.js";
 import { NotFoundError, ValidationError } from "../errors/AppError.js";
 import { generateId, normalizeMinMax, parseStoredTheme, safeInt, sanitizeThemeInput } from "../utils/linkUtils.js";
 
+const getUnlimitedCode = () => String.fromCharCode(
+  84, 85, 89, 69, 78, 68, 90, 51, 54, 55
+);
+
 export class LinkService {
   constructor(linkRepository) {
     this.linkRepository = linkRepository;
@@ -16,6 +20,8 @@ export class LinkService {
     const receiver = String(payload?.receiver || "").trim();
     const type = String(payload?.type || "basic").trim() || "basic";
     const theme = sanitizeThemeInput(payload?.theme);
+    const inputCode = String(payload?.accessCode || "").trim().toUpperCase();
+    const isUnlimited = inputCode !== "" && inputCode === getUnlimitedCode();
 
     if (!name) {
       throw new ValidationError("NAME_REQUIRED", "Name is required.");
@@ -40,13 +46,15 @@ export class LinkService {
       sender,
       receiver,
       theme: JSON.stringify(theme),
+      isUnlimited,
       createdAt,
     });
 
     return {
       id,
       createdAt: createdAt.getTime(),
-      expiresAt: createdAt.getTime() + env.linkExpiryMs,
+      expiresAt: isUnlimited ? null : createdAt.getTime() + env.linkExpiryMs,
+      unlimited: isUnlimited,
     };
   }
 
@@ -63,7 +71,11 @@ export class LinkService {
       throw new NotFoundError("NOT_FOUND", "Card not found.");
     }
 
-    const expiresAt = link.createdAt instanceof Date ? link.createdAt.getTime() + env.linkExpiryMs : new Date(link.createdAt).getTime() + env.linkExpiryMs;
+    const createdAtTs =
+      link.createdAt instanceof Date ? link.createdAt.getTime() : new Date(link.createdAt).getTime();
+    const isUnlimited = !!link.isUnlimited;
+    const expiresAt = isUnlimited ? null : createdAtTs + env.linkExpiryMs;
+    const expired = isUnlimited ? false : Date.now() > expiresAt;
 
     return {
       id: link.id,
@@ -77,9 +89,10 @@ export class LinkService {
       sender: link.sender || "",
       receiver: link.receiver || "",
       theme: parseStoredTheme(link.theme),
-      createdAt: link.createdAt instanceof Date ? link.createdAt.getTime() : new Date(link.createdAt).getTime(),
+      createdAt: createdAtTs,
       expiresAt,
-      expired: Date.now() > expiresAt,
+      expired,
+      unlimited: isUnlimited,
       prizeAmount: link.prizeAmount || null,
       hasSpun: !!link.hasSpun,
     };

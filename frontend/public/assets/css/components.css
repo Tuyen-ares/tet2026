@@ -257,6 +257,19 @@ canvas {
   animation: lixiGoldSweep 4.2s ease-in-out infinite;
 }
 
+body.low-fx .lixi-backdrop {
+  backdrop-filter: none;
+}
+
+body.low-fx .lixi-envelope {
+  filter: none;
+}
+
+body.low-fx .lixi-glitter {
+  animation: none;
+  opacity: 0.55;
+}
+
 .lixi-pocket {
   position: absolute;
   inset: 10px 0 0;

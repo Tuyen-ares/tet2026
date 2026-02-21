@@ -47,3 +47,8 @@
   color: var(--theme-btn-text);
   font-weight: 600;
 }
+
+body.low-fx .card-glow {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
+  backdrop-filter: none;
+}

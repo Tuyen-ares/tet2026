@@ -2,6 +2,7 @@
   const app = window.TetApp;
   let themeBuilderWired = false;
   let previewFrameLoaded = false;
+  let previewPostTimer = null;
   const searchParams = new URLSearchParams(window.location.search);
   const isPreviewMode = searchParams.get("preview") === "1";
 
@@ -30,6 +31,11 @@
     );
   };
 
+  const requestPreviewPost = () => {
+    if (previewPostTimer) clearTimeout(previewPostTimer);
+    previewPostTimer = setTimeout(postPreviewPayload, 90);
+  };
+
   const ensurePreviewFrame = () => {
     const frame = app.dom.fullPagePreviewFrame;
     if (!frame || frame.src) return;
@@ -40,7 +46,7 @@
     frame.src = url.toString();
     frame.addEventListener("load", () => {
       previewFrameLoaded = true;
-      postPreviewPayload();
+      requestPreviewPost();
     });
   };
 
@@ -58,7 +64,7 @@
 
     const refreshPreview = () => {
       app.utils.applyThemeToPreview(app.utils.readThemeInputs());
-      if (previewFrameLoaded) postPreviewPayload();
+      if (previewFrameLoaded) requestPreviewPost();
     };
 
     themeInputs.forEach((input) => {
@@ -78,8 +84,8 @@
     ].filter(Boolean);
 
     contentInputs.forEach((input) => {
-      input.addEventListener("input", () => previewFrameLoaded && postPreviewPayload());
-      input.addEventListener("change", () => previewFrameLoaded && postPreviewPayload());
+      input.addEventListener("input", () => previewFrameLoaded && requestPreviewPost());
+      input.addEventListener("change", () => previewFrameLoaded && requestPreviewPost());
     });
 
     app.dom.advancedCustomizeBtn?.addEventListener("click", () => {
@@ -92,13 +98,13 @@
       }
       if (isOpen) {
         ensurePreviewFrame();
-        setTimeout(postPreviewPayload, 40);
+        setTimeout(requestPreviewPost, 40);
       }
     });
 
     app.dom.themeResetBtn?.addEventListener("click", () => {
       app.utils.resetThemeInputs();
-      if (previewFrameLoaded) postPreviewPayload();
+      if (previewFrameLoaded) requestPreviewPost();
     });
 
     app.utils.resetThemeInputs();
@@ -110,25 +116,34 @@
     wireThemeBuilder();
     if (app.dom.builderSection) app.dom.builderSection.classList.remove("d-none");
     if (app.state.view.cardSection) app.state.view.cardSection.classList.add("d-none");
-    app.effects.startContinuousEffects(app.dom.effectsBuilder, "Yêu", Date.now());
+    app.effects.startContinuousEffects(app.dom.effectsBuilder, "Yêu", Date.now(), "builder");
   };
 
   const showCard = (name, createdAt, wish, title, viewType = "basic", options = {}) => {
-    const { showCountdown = true } = options;
+    const { showCountdown = true, expiresAt = null } = options;
     if (app.dom.builderSection) app.dom.builderSection.classList.add("d-none");
     if (app.state.view.cardSection) app.state.view.cardSection.classList.remove("d-none");
     if (app.state.view.greeting) app.state.view.greeting.textContent = `Chúc mừng năm mới, ${name}!`;
     if (app.state.view.cardTitle) app.state.view.cardTitle.textContent = title || "";
     if (app.state.view.wishText) app.state.view.wishText.textContent = wish;
 
-    app.effects.startContinuousEffects(app.dom.effectsLayer, name, createdAt, viewType);
+    if (showCountdown) {
+      app.effects.startContinuousEffects(app.dom.effectsLayer, name, createdAt, viewType);
+    } else {
+      app.effects.stopContinuousEffects();
+    }
     if (app.wheel && typeof app.wheel.syncFromState === "function") {
       app.wheel.syncFromState();
     }
 
     const updateCountdown = () => {
       if (!app.state.view.expireNotice) return;
-      const remaining = app.constants.EXPIRY_MS - (Date.now() - createdAt);
+      if (expiresAt == null) {
+        app.state.view.expireNotice.textContent = "Link vô thời hạn";
+        return;
+      }
+
+      const remaining = expiresAt - Date.now();
 
       if (remaining <= 0) {
         app.state.view.expireNotice.textContent = "Link đã hết hạn. Đang chuyển trang...";
@@ -158,7 +173,9 @@
     }
 
     updateCountdown();
-    app.state.countdownTimer = setInterval(updateCountdown, 1000);
+    if (expiresAt != null) {
+      app.state.countdownTimer = setInterval(updateCountdown, 1000);
+    }
   };
 
   const getCardId = () => {
@@ -265,7 +282,7 @@
       app.utils.updateHeaderLine(data.name, data.sender, data.receiver);
       app.audio.setupAudio(data.audio);
 
-      showCard(data.name, data.createdAt, wish, data.title, viewType);
+      showCard(data.name, data.createdAt, wish, data.title, viewType, { expiresAt: data.expiresAt });
     } catch (error) {
       showBuilder();
       app.utils.showInvalidLinkNotice();
@@ -283,6 +300,7 @@
       const audioUrl = (document.getElementById("audioUrl") || {}).value?.trim() || "";
       const senderPronoun = app.dom.senderPronounInput?.value?.trim() || "";
       const receiverPronoun = app.dom.receiverPronounInput?.value?.trim() || "";
+      const accessCode = (document.getElementById("accessCode") || {}).value?.trim() || "";
       const minInput = Number((document.getElementById("minLuck") || {}).value) || 1000;
       const maxInput = Number((document.getElementById("maxLuck") || {}).value) || 10000;
       const { safeMin, safeMax } = app.utils.normalizeMinMax(minInput, maxInput);
@@ -308,12 +326,15 @@
             min: app.state.currentMin,
             max: app.state.currentMax,
             theme,
+            accessCode,
           }),
         });
 
         const url = app.api.buildShareUrl(data.id);
         if (linkOutputEl) linkOutputEl.value = url;
-        if (linkHintEl) linkHintEl.textContent = "Link có hiệu lực trong 20 phút.";
+        if (linkHintEl) {
+          linkHintEl.textContent = data.unlimited ? "Link vô thời hạn đã được bật." : "Link có hiệu lực trong 20 phút.";
+        }
       } catch (error) {
         const linkHintEl = document.getElementById("linkHint");
         if (linkHintEl) linkHintEl.textContent = "Không tạo link được, thử lại nhé.";

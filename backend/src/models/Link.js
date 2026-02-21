@@ -53,6 +53,12 @@ Link.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    isUnlimited: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: "is_unlimited",
+    },
     prizeAmount: {
       type: DataTypes.INTEGER,
       allowNull: true,
