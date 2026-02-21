@@ -125,6 +125,16 @@
   box-shadow: 0 6px 15px rgba(255, 180, 80, 0.45);
 }
 
+body.low-fx .firework-icon {
+  filter: none;
+}
+
+body.low-fx .lantern-frame,
+body.low-fx .lantern-body,
+body.low-fx .lantern-flame {
+  box-shadow: none;
+}
+
 @keyframes floatHeart {
   0% {
     transform: translateY(20px) rotate(45deg) scale(0.7);
